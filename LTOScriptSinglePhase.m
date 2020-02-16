@@ -5,7 +5,7 @@ clear all; close all;
 nPhase = 2;
 phaseBody{1,1} = {'Earth', 'Moon'};
 phaseBody{2,1} = {'Earth', 'Moon'};
-System = setSystem(nPhase, phaseBody);
+SystemMulti = setSystem(nPhase, phaseBody);
 
 %% Initial guess
 
@@ -13,23 +13,24 @@ Setup.transferType = 'periodicOrbits';
 % InitialGuessSetup.transferType = 'manifolds';
 
 % Setup.Phase{1,1}.orbitName = 'Distant_Retrograde_2D';
-% Setup.Phase{1,1}.orbitSelect = {'JC', 2.223};
+% Setup.Phase{1,1}.orbitSelect = {'nJC', 2.223};
 Setup.Phase{1,1}.orbitName = 'Halo_L2';
-Setup.Phase{1,1}.orbitSelect = {'JC', 3.015};
-Setup.Phase{1,1}.s = 17; % Number of segments for each orbit
-Setup.Phase{1,1}.nRev = 3; % Total revolution for the thing .. you know
+Setup.Phase{1,1}.orbitSelect = {'nJC', 3.015};
+Setup.Phase{1,1}.s = 20; % Number of segments for each orbit
+Setup.Phase{1,1}.nRev = 2; % Total revolution for the thing .. you know
 
 Setup.Phase{2,1}.orbitName = 'Halo_L1';
-Setup.Phase{2,1}.orbitSelect = {'JC', 3.015};
+Setup.Phase{2,1}.orbitSelect = {'nJC', 3.015};
 % Setup.Phase{2,1}.orbitName = 'Short_Period_L4L5';
-% Setup.Phase{2,1}.orbitSelect = {'JC', 2.223};
-Setup.Phase{2,1}.s = 17; % Number of segments for each orbit
-Setup.Phase{2,1}.nRev = 3; % Total revolution for the thing .. you know
+% Setup.Phase{2,1}.orbitSelect = {'nJC', 2.223};
+Setup.Phase{2,1}.s = 20; % Number of segments for each orbit
+Setup.Phase{2,1}.nRev = 2; % Total revolution for the thing .. you know
 
-LPointVec = [1 2 3 4 5];
+LPointVec = [1 2];
 Setup.plot = {true, 1, LPointVec};
 
-InitialGuess = setInitialGuess(System, Setup);
+InitialGuess = setInitialGuess(SystemMulti, Setup);
+
 
 %% Spacecraft specs
 
@@ -37,12 +38,12 @@ SC.m0D = 500; % kg
 SC.ispD = 2000; % seconds
 SC.thrustMaxD = 0.1; % Newton
 
-Spacecraft = setSpacecraft(System, SC);
+Spacecraft = setSpacecraft(SystemMulti, SC);
 
 %% Set optimizer option
 
 Option.integrate = odeset('RelTol', 1e-12, 'AbsTol', 1e-18);
-Option.LTO = LToptset('FeasibilitySolver', true, 'Optimizer', false, ...
+Option.LTO = LToptset('FeasibilitySolver', true, 'Optimizer', true, ...
 	'MeshRefinement', true);
 Option.newton.maxIteration = 200;
 Option.newton.fcnTolerance = 1e-12;
@@ -57,7 +58,7 @@ Option.fsolve = optimoptions('fsolve', 'Display','iter', ...
 	'FiniteDifferenceStepSize', 1e-7, ...
 	'SpecifyObjectiveGradient', true, ...
 	'OptimalityTolerance', 1e-10, ...
-	'maxiteration', 300);
+	'maxiteration', 200);
 
 Option.fmincon = optimoptions('fmincon', 'Algorithm', 'Interior-point', ...
 	'Display','iter', ...
@@ -71,8 +72,8 @@ Option.fmincon = optimoptions('fmincon', 'Algorithm', 'Interior-point', ...
 	'SubproblemAlgorithm', 'cg', ...
 	'FiniteDifferenceType', 'central', ...
 	'ConstraintTolerance', 1e-13, ...
-	'OptimalityTolerance', 1e-7, ...
-	'maxiteration', 100000, ...
+	'OptimalityTolerance', 1e-6, ...
+	'maxiteration', 1000000, ...
 	'InitBarrierParam', 1e-4);
 
 Option.doneFeasible = 0;
@@ -88,26 +89,26 @@ Option.plot.optimize = {true, optPlotNumber, LPointVec};
 
 %% Set additional constraints
 
-% Option.AddCon{1, 1} = [];
-% Option.AddCon{2, 1} = [];
+Option.AddCon{1, 1} = [];
+Option.AddCon{2, 1} = [];
+% 
+% Option.AddCon{1, 1} = {'nlnr' ,'ineq', 'Altitude', 1, 30000};
+% Option.AddCon{1, 2} = {'nlnr', 'ineq', 'Altitude', 2, 7000};
+% 
+% Option.AddCon{2, 1} = {'nlnr', 'ineq', 'Altitude', 1, 30000};
+% Option.AddCon{2, 2} = {'nlnr', 'ineq', 'Altitude', 2, 7000};
 
-Option.AddCon{1, 1} = {'nlnr' ,'ineq', 'Altitude', 1, 60000};
-Option.AddCon{1, 2} = {'nlnr', 'ineq', 'Altitude', 2, 7000};
 
-Option.AddCon{2, 1} = {'nlnr', 'ineq', 'Altitude', 1, 60000};
-Option.AddCon{2, 2} = {'nlnr', 'ineq', 'Altitude', 2, 7000};
-
-
-
+%% merge it into a single phase
+System = cell(1,1);
+System{1} = SystemMulti{1};
+InitialGuessSingle = mergePhase(InitialGuess);
+SpacecraftSingle = cell(1,1);
+SpacecraftSingle{1} = Spacecraft{1};
 
 
 %% Calls LTOMain
 
-Result = LTOMain(System, InitialGuess, Spacecraft, Option);
-
-% load('Newton')
-% testDefect(mu, x1, x3, x5, x7, u, ispND, g0ND, dt, phi, phiPrime)
-
-% Problem = setProblem(InitialGuess, Spacecraft, Option);
+Result = LTOMain(System, InitialGuessSingle, SpacecraftSingle, Option);
 
 

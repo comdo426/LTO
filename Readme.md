@@ -1,0 +1,2 @@
+LTO project version
+
