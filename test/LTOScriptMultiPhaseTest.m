@@ -15,8 +15,8 @@ else
 end
 
 nPhase = 2;
-phaseBody{1,1} = {'Earth', 'Moon'};
-phaseBody{2,1} = {'Sun'};
+phaseBody{1,1} = {'EARTH', 'MOON'};
+phaseBody{2,1} = {'SUN'};
 System = setSystem(nPhase, phaseBody);
 
 %% Initial guess
@@ -31,7 +31,7 @@ load('LICInitialGuess25.mat');
 %% Spacecraft specs
 SC.m0D = 1000; % kg
 SC.ispD = 2000; % seconds
-SC.thrustMaxD = 0.1; % Newton
+SC.thrustMaxD = 0.4; % Newton
 
 Spacecraft = setSpacecraft(System, SC);
 
@@ -39,7 +39,7 @@ Spacecraft = setSpacecraft(System, SC);
 
 Option.integrate = odeset('RelTol', 1e-12, 'AbsTol', 1e-18);
 Option.LTO = LToptset('FeasibilitySolver', true, 'Optimizer', true, ...
-	'MeshRefinement', false);
+	'MeshRefinement', true);
 Option.newton.maxIteration = 30;
 Option.newton.fcnTolerance = 1e-12;
 Option.newton.stepTolerance = 1e-17;
@@ -79,7 +79,7 @@ Option.meshTolerance = 1e-11;
 
 feasPlotNumber = [[11:1:20];[21:1:30]];
 optPlotNumber = [[31:1:40];[41:1:50]];
-Option.plot.feasible = {true, feasPlotNumber, LPointVec};
+Option.plot.feasible = {false, feasPlotNumber, LPointVec};
 Option.plot.optimize = {true, optPlotNumber, LPointVec};
 
 %% Set additional constraints

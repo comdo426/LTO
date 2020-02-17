@@ -93,9 +93,9 @@ Spacecraft = setSpacecraft(System, SC);
 
 Option.integrate = odeset('RelTol', 1e-12, 'AbsTol', 1e-18);
 Option.LTO = LToptset( ...
-	'FeasibilitySolver', true, ...
-	'Optimizer', false, ...
-	'MeshRefinement', false);
+	'FeasibilitySolver', false, ...
+	'Optimizer', true, ...
+	'MeshRefinement', true);
 Option.newton.maxIteration = 1;
 Option.newton.fcnTolerance = 1e-12;
 Option.newton.stepTolerance = 1e-17;
@@ -133,7 +133,7 @@ Option.doneFeasible = 0;
 Option.doneOptimize = 0;
 Option.doneMesh = 0;
 Option.removeMesh = 0;
-Option.meshTolerance = 1e-11;
+Option.meshTolerance = 1e-12;
 
 feasPlotNumber = [[11:1:20];[21:1:30]];
 optPlotNumber = [[31:1:40];[41:1:50]];

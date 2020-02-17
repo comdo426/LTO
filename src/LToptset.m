@@ -1,4 +1,19 @@
 function options = LToptset(varargin)
+%LTOPTSET - sets the LT options
+%
+%  Syntax:
+%     options = LTOPTSET(varargin)
+%
+%  Example:
+%		Option.LTO = LToptset( ...
+%		'FeasibilitySolver', true, ...
+%		'Optimizer', false, ...
+%		'MeshRefinement', true);
+%
+%	See also: LTOPTGET
+%
+%   Author: Beom Park
+%   Date: 01-Feb-2020; Last revision: 17-Feb-2020
 
 Names = [
     'EngineType       '
@@ -48,7 +63,7 @@ end
 
 % A finite state machine to parse name-value pairs.
 if rem(nargin-i+1,2) ~= 0
-  error(message('MATLAB:odeset:ArgNameValueMismatch'));
+  error(message('MATLAB:LTodeset:ArgNameValueMismatch'));
 end
 expectval = 0;                          % start expecting a name, not a value
 while i <= nargin
@@ -56,13 +71,13 @@ while i <= nargin
     
   if ~expectval
     if ~ischar(arg)
-      error(message('MATLAB:odeset:NoPropName', i));
+      error(message('MATLAB:LTodeset:NoPropName', i));
     end
     
     lowArg = lower(arg);
     j = strmatch(lowArg,names);
     if isempty(j)                       % if no matches
-      error(message('MATLAB:odeset:InvalidPropName', arg));
+      error(message('MATLAB:LTodeset:InvalidPropName', arg));
     elseif length(j) > 1                % if more than one match
       % Check for any exact matches (in case any names are subsets of others)
       k = strmatch(lowArg,names,'exact');
@@ -73,7 +88,7 @@ while i <= nargin
         for k = j(2:length(j))'
                 matches = [matches ', ' deblank(Names(k,:))]; %#ok<AGROW>
         end
-            error(message('MATLAB:odeset:AmbiguousPropName',arg,matches));
+            error(message('MATLAB:LTodeset:AmbiguousPropName',arg,matches));
       end
     end
     expectval = 1;                      % we expect a value next
@@ -87,5 +102,5 @@ while i <= nargin
 end
 
 if expectval
-  error(message('MATLAB:odeset:NoValueForProp', arg));
+  error(message('MATLAB:LTodeset:NoValueForProp', arg));
 end

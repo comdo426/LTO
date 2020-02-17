@@ -1,49 +1,77 @@
 function [c, F, gc, dF] = fminconConstraint(x, System, State, ...
 	Spacecraft, Option, Collocation)
+%FMINCONCONSTRAINT - computes the F and dF matrix for fsolve/newtonRaphson
+%
+%  Syntax:
+%     [c, F, gc, dF] = FMINCONCONSTRAINT(x, System, State, ...
+%		Spacecraft, Option, Collocation)
+%
+%  Description:
+%     Computes F and dF matrix for fsolve/newtonRaphson.
+%
+%  Inputs:
+%		x - parameter composed of state, control and slack variables
+%
+%  Outputs:
+%     F - constraint column vector
+%		dF - dF/dx matrix. Note that rows correspond to parameters and columns
+%		correspond to the constraint
+%		c - inequaltiy constraint columb vector []
+%		gc - dc/dx matrix. []
+%
+%  See also: FSOLVECONSTRAINT
+%
+%   Author: Beom Park
+%   Date: 01-Feb-2020; Last revision: 17-Feb-2020
 
 c = [];
 gc = [];
 
 nPhase = length(System);
 
-nContinuityTTL = 0;
+%% number of continuity constraint
+
+mContinuityTTL = 0;
 isIniCon = ~isempty(State{1}.initialConstraint);
 if isIniCon
 	stateIniCon = State{1}.initialConstraint;
 	nIniCon = length(stateIniCon);
-	nContinuityTTL = nContinuityTTL + nIniCon;
+	mContinuityTTL = mContinuityTTL + nIniCon;
 end
 isFinCon = ~isempty(State{end}.finalConstraint);
 if isFinCon
 	stateFinCon = State{end}.finalConstraint;
 	nFinCon = length(stateFinCon);
-	nContinuityTTL = nContinuityTTL + nFinCon;
+	mContinuityTTL = mContinuityTTL + nFinCon;
 end
-nContinuityTTL = nContinuityTTL + 7*(nPhase-1);
+mContinuityTTL = mContinuityTTL + 7*(nPhase-1);
 
 phaseIni = zeros(7, nPhase);
 phaseFin = zeros(7, nPhase);
 
-% don't have lambda, 0
+%% number of parameter, number of constraints for each phase
+
 [~, nxOpt] = getnx(State);
 [~, mcOpt] = getmc(System, State, Spacecraft, Option);
 
 %% dimension of the F, dF matrix
 
-% 21 used instead of 22, to exclude the slack variable constraint
-
-m = sum(mcOpt) + nContinuityTTL; % row number of constraint
+m = sum(mcOpt) + mContinuityTTL; % row number of constraint
 n = length(x); % column number of variables
+if n ~= sum(nx)
+	error('Number of parameters wrong')
+end
 
 F = nan(m, 1);
 dF = zeros(m, n);
 
 tstar = nan(nPhase,1);
 
+%% iPhase loop
 
 for iPhase = 1:nPhase
 	
-	%% Information from the input
+	%% setting numbers for each phase
 	
 	isCR3BP = strcmp(System{iPhase}.dynamics(1), 'CR3BP');
 	is2BP = strcmp(System{iPhase}.dynamics(1), '2BP');
@@ -55,7 +83,7 @@ for iPhase = 1:nPhase
 		getPhaseStateInfo(State{iPhase});
 	t = t + State{iPhase}.t0; % Add the offset from phasing(if needed)
 	[~, ispND, g0ND] = getSpacecraftInfo(Spacecraft{iPhase});
-	% nb, mb
+	% nb, mb: Number of parameters/constraints Before the i-th phase
 	if iPhase == 1
 		nb = 0;
 		mb = 0;
@@ -63,10 +91,11 @@ for iPhase = 1:nPhase
 		nb = sum(nxOpt(1:iPhase-1));
 		mb = sum(mcOpt(1:iPhase-1));
 	end
+	
 	% index initialization
 	cnt = 0;
 	
-	for i = 1:nSegment
+	for i = 1:nSegment % iSegment for loop
 		
 		%% Defect constraint
 		% define state at each node
@@ -79,8 +108,6 @@ for iPhase = 1:nPhase
 		u(:, 1) = x(nState + 3*(i-1)+1 +nb: nState + 3*i + nb);
 		% time step at each segment
 		dt = t(i+1) - t(i);
-		
-		%% F construction
 		
 		if isCR3BP
 			FDefect = defectConstraint(mu, Y, u, t(i), dt, Collocation, ispND, g0ND);
@@ -96,19 +123,14 @@ for iPhase = 1:nPhase
 		dF(21*(i-1)+1+mb: 21*i+mb, 28*(i-1)+1-7*cnt+nb: 28*(i-1)+28-7*cnt+nb) = dFx;
 		dF(21*(i-1)+1+mb: 21*i+mb, nState+3*(i-1)+1+nb: nState+3*i+nb) = dFu;
 		
-		% 		FDefect = defectConstraint(mu, Y, u, t(i), dt, Collocation, ispND, g0ND);
-		% 		F(21*(i-1)+1 + mb: 21*i + mb, 1) = FDefect;
-		%
-		% 		[dFx, dFu] = dFDefect(mu, Y, u, t(i), dt, Collocation, ispND, g0ND);
-		% 		dF(21*(i-1)+1+mb: 21*i+mb, 28*(i-1)+1-7*cnt+nb: 28*(i-1)+28-7*cnt+nb) = dFx;
-		% 		dF(21*(i-1)+1+mb: 21*i+mb, nState+3*(i-1)+1+nb: nState+3*i+nb) = dFu;
-		%
+		% initial/final state at each phase
 		if i == 1
 			phaseIni(:, iPhase) = x1;
 		end
 		if i == nSegment
 			phaseFin(:, iPhase) = x7;
 		end
+		
 		% increment on index
 		cnt = cnt + 1;
 	end % iSegment for loop
@@ -124,6 +146,7 @@ for iPhase = 1:nPhase
 		
 		for iNode = 1:nNode
 			
+			% Note that some of the below is written only for altitude constraint.
 			sigma1 = x(nState + nControl + nThrust + iNode + nb);
 			nSigma1 = nNode;
 			mSigma1 = nNode;
@@ -153,18 +176,11 @@ for iPhase = 1:nPhase
 		end
 	end
 	
-	%% F construction
+	%% Continuity constraint
 	
 	mt = sum(mcOpt);
 	
 	% F
-	% 	if iPhase == 1
-	% 		F(mt+1: mt+nIniCon) = phaseIni(:, 1) - stateIniCon;
-	% 	else
-	% 		F(mt+nIniCon+7*(iPhase-2)+1: mt+nIniCon+7*(iPhase-1)) = ...
-	% 			phaseIni(:,iPhase) - phaseFin(:,iPhase-1);
-	% 	end
-	
 	if iPhase == 1
 		F(mt+1: mt+nIniCon) = phaseIni(:, 1) - stateIniCon;
 	else
@@ -203,15 +219,6 @@ for iPhase = 1:nPhase
 		dF(mt+nIniCon+7*(iPhase-2)+1: mt+nIniCon+7*(iPhase-1), ...
 			1+nb: 7+nb) = eye(7);
 	end
-	% 	if iPhase == 1
-	% 		dF(mt+1: mt+nIniCon, 1:nIniCon) = eye(nIniCon);
-	% 		if nPhase > 1
-	% 			dF(mt+nIniCon+1: mt+nIniCon+7, (nState-7)+1:nState) = -eye(7);
-	% 		end
-	% 	else
-	% 		dF(mt+nIniCon+7*(iPhase-2)+1: mt+nIniCon+7*(iPhase-1), ...
-	% 			1+nb: 7+nb) = eye(7);
-	% 	end
 	
 	if iPhase == nPhase
 		dF(mt+nIniCon+7*(iPhase-1)+1: mt+nIniCon+7*(iPhase-1)+nFinCon, ...
@@ -225,7 +232,6 @@ for iPhase = 1:nPhase
 end % iPhase for loop
 
 % Due to how dF matrix is handled within fmincon, you should transpose it.
-save('TEST', 'dF');
 dF = dF';
 
 end

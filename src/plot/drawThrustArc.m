@@ -30,10 +30,12 @@ if isSame
 			else
 				color = [0 0 1];
 			end
+			figure(figureNo)
 			plot3(stateMat(3*(i-1)+1:3*i+1,1), stateMat(3*(i-1)+1:3*i+1,2), ...
 				stateMat(3*(i-1)+1:3*i+1,3), 'Color', color, ...
 				'linewidth', 1.5);
 		end
+		figure(figureNo)
 		plot3(stateSegmentMat(:,1), stateSegmentMat(:,2), stateSegmentMat(:,3), ...
 			'k.', 'linewidth', 1.0);
 	end
@@ -117,13 +119,13 @@ else % only works for two phases
 			'linewidth', 1.5);
 	end
 	
-% 	figure(figureNo)
-% 	plot3(stateSegmentMat(:,1), stateSegmentMat(:,2), stateSegmentMat(:,3), ...
-% 		'k.', 'linewidth', 1.0);
-% 	figure(figureNo+100)
-% 	plot3(flybyInertSunSegND(:,1), flybyInertSunSegND(:,2), flybyInertSunSegND(:,3), ...
-% 		'k.', 'linewidth', 1.0);
-% 	
+	% 	figure(figureNo)
+	% 	plot3(stateSegmentMat(:,1), stateSegmentMat(:,2), stateSegmentMat(:,3), ...
+	% 		'k.', 'linewidth', 1.0);
+	% 	figure(figureNo+100)
+	% 	plot3(flybyInertSunSegND(:,1), flybyInertSunSegND(:,2), flybyInertSunSegND(:,3), ...
+	% 		'k.', 'linewidth', 1.0);
+	%
 	
 	
 	%% second phase: inertial frame
@@ -143,7 +145,7 @@ else % only works for two phases
 	
 	etVec2 = (tAug2*tstarS + (JDf-cspice_j2000)*60*60*24)';
 	etVecSeg2 = (t2*tstarS + (JDf - cspice_j2000)*60*60*24);
-
+	
 	legEarthSun = cspice_spkezr('EARTH', etVec2, 'J2000', 'NONE', 'SUN');
 	stateMatD = [stateMat(:,1:3)*lstarS, stateMat(:,4:6)*lstarS/tstarS];
 	legInertEarth = stateMatD - legEarthSun';
@@ -177,16 +179,16 @@ else % only works for two phases
 		
 		
 	end
-% 	figure(figureNo+100)
-% 	plot3(stateSegmentMat(:,1), stateSegmentMat(:,2), stateSegmentMat(:,3), ...
-% 		'k.', 'linewidth', 1.0);
-% 	
+	% 	figure(figureNo+100)
+	% 	plot3(stateSegmentMat(:,1), stateSegmentMat(:,2), stateSegmentMat(:,3), ...
+	% 		'k.', 'linewidth', 1.0);
+	%
 	% do the transformation here and move it to rotating frame
-% 	figure(figureNo)
-% 	plot3(legRotEarthSeg(:,1), legRotEarthSeg(:,2), legRotEarthSeg(:,3), ...
-% 		'k.', 'linewidth', 1.0);
-% 	
-% 	
+	% 	figure(figureNo)
+	% 	plot3(legRotEarthSeg(:,1), legRotEarthSeg(:,2), legRotEarthSeg(:,3), ...
+	% 		'k.', 'linewidth', 1.0);
+	%
+	%
 	
 	save('plotTest')
 	

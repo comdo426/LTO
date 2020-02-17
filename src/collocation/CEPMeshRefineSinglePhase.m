@@ -1,30 +1,61 @@
 function [StatePhase, doneMeshPhase] = ...
 	CEPMeshRefineSinglePhase(SystemPhase, StatePhase, SpacecraftPhase, Option)
+%CEPMESHREFINESINGLEPHASE - refines mesh with CEP single phase
+%
+%  Syntax:
+%     [StatePhase, doneMeshPhase] = ...
+%		CEPMESHREFINESINGLEPHASE(SystemPhase, StatePhase, SpacecraftPhase, Option)
+%
+%  Description:
+%     refines mesh with CEP method. 
+%
+%  Inputs:
+%		Option - contains the information about the mesh refinement settings
+%		Example:
+%			Option.doneFeasible = 0;
+%			Option.doneOptimize = 0;
+%			Option.doneMesh = 0;
+%			Option.removeMesh = 0;
+%			Option.meshTolerance = 1e-12;
+%
+%  Outputs:
+%     StatePhase - structure for the refined State for each phase
+%		doneMeshPhase - boolean variable denoting the end of mesh refinement
+%
+%	See also: CEPMESHREFINEMULTIPHASE, CR3BPLT_CSI_INERTIAL, CONICLT
+%
+%   Author: Beom Park
+%   Date: 01-Feb-2020; Last revision: 17-Feb-2020
 
+% Define the propagator depending on the dynamics
 isCR3BP = strcmp(SystemPhase.dynamics{1}, 'CR3BP');
 is2BP = strcmp(SystemPhase.dynamics{1}, '2BP');
+if isCR3BP
+	prop = str2func('CR3BPLT');
+end
+if is2BP
+	prop = str2func('conicLT');
+end
 
+% Set necessary numbers
 t0 = StatePhase.t0;
-
 opts = Option.integrate;
 tol = Option.meshTolerance;
-
 mu = SystemPhase.parameter.mu;
 [t, s, ~, nState, ~, ~, ~] = getPhaseStateInfo(StatePhase);
 [~, ispND, g0ND] = getSpacecraftInfo(SpacecraftPhase);
 
+% Put state/control into a single vector x
 x = [StatePhase.state; StatePhase.control];
 
+% Put state/control into a matrix x_s, u
 [~, x_s, u] = getStateControlMat(StatePhase);
 
-tau = [-1; -sqrt(495 +66*sqrt(15))/33; -sqrt(495 -66*sqrt(15))/33; 0; ...
-	sqrt(495 -66*sqrt(15))/33; sqrt(495 +66*sqrt(15))/33; 1];
-tauRatio = (tau - ones(1, 7)*tau(1))/2;
-tauAdd = [-1; -1+0.5*(1-sqrt(495 -66*sqrt(15))/33); ...
-	-1+0.5*(1+sqrt(495 -66*sqrt(15))/33); 0; ...
-	+ 0.5*(1-sqrt(495 -66*sqrt(15))/33);  0.5*(1+sqrt(495 -66*sqrt(15))/33); 1];
+% Set collocation variable/matrices
+Collocation = setCollocation;
+tauRatio = Collocation.tauRatio;
+phiMeshAdd = Collocation.phiMeshAdd;
 
-[Phi, PhiPrime, PhiMeshAdd] = LGL_7th_coefficient;
 if Option.removeMesh == 1
 	
 	%% Remove
@@ -36,10 +67,10 @@ if Option.removeMesh == 1
 	for i = 1:s-1
 		if skipSwitch ~= 1
 			% First propagation
-			[~, state] = ode113(@(t,y) CR3BPLT_CSI_Inertial(t,y,u(i,:),mu, ...
+			[~, state] = ode113(@(t,y) prop(t,y,u(i,:),mu, ...
 				ispND,g0ND,t0), [t(i), t(i+1)], x_s(i,:), opts);
 			% Second propagation
-			[~, state] = ode113(@(t,y) CR3BPLT_CSI_Inertial(t,y,u(i,:),mu, ...
+			[~, state] = ode113(@(t,y) prop(t,y,u(i,:),mu, ...
 				ispND,g0ND,t0), [t(i+1), t(i+2)], state(end,:), opts);
 			xProp = state(end, :);
 			E = xProp - x_s(i+2,:);
@@ -102,7 +133,7 @@ else
 	aN = [];
 	normEA = nan(s, 1);
 	for i = 1:s
-		[~, state] = ode113(@(t,y) CR3BPLT_CSI_Inertial(t,y,u(i,:),mu,ispND, ...
+		[~, state] = ode113(@(t,y) prop(t,y,u(i,:),mu,ispND, ...
 			g0ND, t0), [t(i), t(i+1)], x_s(i,:), opts);
 		xProp = state(end,:);
 		E = xProp - x_s(i+1, :);
@@ -116,7 +147,7 @@ else
 	end
 	
 	if ~isempty(aN)
-		fprintf('Max error is %0.5e\n', max(normEA));
+		cprintf(-[0 0 1], 'Max error is %0.5e\n', max(normEA));
 		
 		for j = 1:length(aN)
 			dt = t(aN(j)+1)-t(aN(j));
@@ -141,7 +172,7 @@ else
 			
 			B = [Y, dt/2*Ydot];
 			
-			xAMat = B*PhiMeshAdd';
+			xAMat = B*phiMeshAdd';
 			xA = [xAMat(:,1); xAMat(:,2); xAMat(:,3); xAMat(:, 4); xAMat(:,5)];
 			
 			if length(aN) == 1
@@ -168,8 +199,6 @@ else
 		
 		StatePhase.state = xNew;
 		StatePhase.control = uNew;
-		size(t)
-		size(tAdd)
 		t = sort([t; tAdd']);
 		StatePhase.timeSegment = t;
 		StatePhase.nSegment = length(t)-1;

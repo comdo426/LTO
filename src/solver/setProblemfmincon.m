@@ -1,4 +1,33 @@
-function [Problem, State] = setProblemfmincon(System, State, Spacecraft, Option, Collocation)
+function [Problem, State] = ...
+	setProblemfmincon(System, State, Spacecraft, Option, Collocation)
+%SETPROBLEMFMINCON - sets Problem structure for fmincon
+%
+%  Syntax:
+%     [Problem, State] = ...
+%		SETPROBLEMFMINCON(System, State, Spacecraft, Option, Collocation)
+%
+%  Description:
+%     Produces Problem structure for the fmincon. It's composed of
+%     following sections.
+%			- initialization: generate x0(initial guess) for fmincon. Note that the
+%			size differs depending on the number of constraints
+%			constraints(e.g., altitude constraints)
+%			- set objective function: sets the function to be minimized. In
+%			this function it always calls fminconObjective.m
+%			- set linear constraint(optional)
+%			- set boundary constraint(optional)
+%			- set nonlinear constraint function. fminconConstraint function called.
+%			- set option: pass on the user input Option
+%			- set solver: this is set to be 'fmincon'
+%
+%  Outputs:
+%     Problem - structure with properties for the Problem
+%		State - after the slack variables are added
+%
+%  See also: SETPROBLEMFSOLVE, FMINCONOBJECTIVE, FMINCONCONSTRAINT
+%
+%   Author: Beom Park
+%   Date: 01-Feb-2020; Last revision: 16-Feb-2020
 
 nPhase = length(State);
 
@@ -20,7 +49,7 @@ for iPhase = 1:nPhase
 			isNlnr = strcmp(Con{1}, 'nlnr');
 			isSlack = strcmp(Con{2}, 'ineq'); % If slack, we need to augment the x0
 			if isNlnr && isSlack
-				c = str2func(strcat('get',Con{3},'Constraint'));
+				c = str2func(strcat('set',Con{3},'Constraint'));
 				sigma = c(System{iPhase}, State{iPhase}, Spacecraft{iPhase}, Con);
 				Problem.x0 = [Problem.x0; sigma];
 				State{iPhase}.slack = [State{iPhase}.slack; sigma];
@@ -44,9 +73,6 @@ for iPhase = 1:nPhase
 	
 end
 
-%% set options
-Problem.options = Option.fmincon;
-Problem.solver = 'fmincon';
 
 %% set objective function
 Problem.objective = @(x) fminconObjective(x, iFinalMass);
@@ -90,4 +116,8 @@ Problem.ub = ub;
 Problem.nonlcon = @(x) fminconConstraint(x, System, State, Spacecraft, ...
 	Option, Collocation); 
 
+%% set options
+Problem.options = Option.fmincon;
+%% set solver
+Problem.solver = 'fmincon';
 end

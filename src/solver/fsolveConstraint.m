@@ -77,7 +77,7 @@ for iPhase = 1:nPhase
 		getPhaseStateInfo(State{iPhase});
 	t = t + State{iPhase}.t0; % Add the offset from phasing(if needed)
 	[thrustMaxND, ispND, g0ND] = getSpacecraftInfo(Spacecraft{iPhase});
-	% nb: Number of parameters Before the i-th phase
+	% nb, mb: Number of parameters/constraints Before the i-th phase
 	if iPhase == 1
 		nb = 0;
 		mb = 0;
