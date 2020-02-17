@@ -1,4 +1,5 @@
 function Spacecraft = setSpacecraft(System, SC)
+%SETSPACECRAFT - nondimensionlize and stores spacecraft thrust information
 
 nPhase = length(System);
 g0D = 9.80665/1000; %km/s^2

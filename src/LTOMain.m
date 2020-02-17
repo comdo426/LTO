@@ -1,32 +1,42 @@
 function State = LTOMain(System, State, Spacecraft, Option)
+%LTOMAIN - solves the low-thrust optimization problem
+%
+%  Syntax:
+%     State = LTOMAIN(System, State, Spacecraft, Option)
+%
+%  Description:
+%     Solves the LTO problem with LGL 7th order collocation scheme
+%
+%  Inputs:
+%		System: cell for the dynamics and parameter of each phase
+%		State: cell for the state, control, constraints of each phase
+%		Spacecraft: cell for the dimensional/non-dimensional spacecraft specs
+%		Option: cell for the options of integration, and solvers
+%
+%  Outputs:
+%     State - cell for the state, control of the converged solution
+%
+%   Author: Beom Park
+%   Date: 16-Feb-2020; Last revision: 16-Feb-2020
 
-%% set boolean variables
+%% Settings before going into the algorithm
 
+% boolean variables
 isFeasible = LToptget(Option.LTO, 'FeasibilitySolver');
 isOptimize = LToptget(Option.LTO, 'Optimizer');
 isMesh = LToptget(Option.LTO, 'MeshRefinement');
 
-%% Collocation matrices
-
-[phi, phiPrime, phiMeshAdd] = LGL_7th_coefficient;
-Collocation.phi = phi;
-Collocation.phiPrime = phiPrime;
-Collocation.phiMeshAdd = phiMeshAdd;
-Collocation.tau = [-1, -0.830223896278567, -0.468848793470714, 0, ...
-	0.468848793470714, 0.830223896278567, 1];
-tau = Collocation.tau;
-Collocation.tauRatio = (tau - ones(1, 7)*tau(1))/2;
+% Collocation structure
+Collocation = setCollocation;
 
 %% feasible
 
 iWhile = 1;
 
 while isFeasible && ~Option.doneFeasible
-	fprintf('Feasible: step no. %d\n', iWhile);
+	cprintf(-[1, 0, 0], 'Feasible: step no. %d\n', iWhile);
 	Problem = setProblemfsolve(System, State, Spacecraft, Option, ...
 		Collocation);
-% 	save('Problem')
-% 	break
 	if ~isempty(Option.newton) % newton-raphson method
 		feasibleWithSlack = newtonRaphson(Problem);
 		feasibleVec = deleteSlackVariable(feasibleWithSlack, State, Option, 1, 0);
@@ -53,7 +63,7 @@ while isFeasible && ~Option.doneFeasible
 		figure(Option.plot.feasible{2}(1,iWhile)+100)
 		legend([initialPlot, interPhase, finalPlot], {'Initial', 'InterPhase', ...
 			'Final'}, 'fontsize', 13);
-	end
+	end % plot for feasible if loop
 	
 	
 	if isMesh

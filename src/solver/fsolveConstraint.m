@@ -1,24 +1,44 @@
 function [F, dF] = fsolveConstraint(x, System, State, ...
 	Spacecraft, Option, Collocation)
+%FSOLVECONSTRAINT - computes the F and dF matrix for fsolve/newtonRaphson
+%
+%  Syntax:
+%     [F, dF] = FSOLVECONSTRAINT(x, System, State, ...
+%		Spacecraft, Option, Collocation)
+%
+%  Description:
+%     Computes F and dF matrix for fsolve/newtonRaphson. 
+%
+%  Inputs:
+%		x - parameter composed of state, control and slack variables
+%
+%  Outputs:
+%     F - constraint column vector
+%		dF - dF/dx matrix
+%
+%  See also: FMINCONCONSTRAINT
+%
+%   Author: Beom Park
+%   Date: 01-Feb-2020; Last revision: 16-Feb-2020
 
 nPhase = length(System);
 
-%% continuity setup
+%% number of continuity constraint
 
-nContinuityTTL = 0;
+mContinuityTTL = 0;
 isIniCon = ~isempty(State{1}.initialConstraint);
 if isIniCon
 	stateIniCon = State{1}.initialConstraint;
 	nIniCon = length(stateIniCon);
-	nContinuityTTL = nContinuityTTL + nIniCon;
+	mContinuityTTL = mContinuityTTL + nIniCon;
 end
 isFinCon = ~isempty(State{end}.finalConstraint);
 if isFinCon
 	stateFinCon = State{end}.finalConstraint;
 	nFinCon = length(stateFinCon);
-	nContinuityTTL = nContinuityTTL + nFinCon;
+	mContinuityTTL = mContinuityTTL + nFinCon;
 end
-nContinuityTTL = nContinuityTTL + 7*(nPhase-1);
+mContinuityTTL = mContinuityTTL + 7*(nPhase-1);
 
 phaseIni = zeros(7, nPhase);
 phaseFin = zeros(7, nPhase);
@@ -28,10 +48,9 @@ phaseFin = zeros(7, nPhase);
 [nx, ~] = getnx(State);
 [mc, ~] = getmc(System, State, Spacecraft, Option);
 
-
 %% dimension of the F, dF matrix
 
-m = sum(mc) + nContinuityTTL; % row number of constraint
+m = sum(mc) + mContinuityTTL; % row number of constraint
 n = length(x); % column number of variables
 
 F = nan(m, 1);

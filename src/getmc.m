@@ -1,12 +1,28 @@
 function [mc, mcOpt] = getmc(System, State, Spacecraft, Option)
+%GETNX - gets the number of constraints for the fsolve/newtonRaphson/fmincon
+%
+%  Syntax:
+%     [mc, mcOpt] = GETNX(State)
+%
+%  Description:
+%     gets the number of constraints for the each iPhase. 
+%
+%  Outputs:
+%     mx - column vector of numbers of constraints for each phase
+%		mxOpt - column vector of numbers of constraints for each phase(optimizer)
+%
+%  See also: SETPROBLEMFSOLVE, SETPROBLEMFMINCON, GETNX
+%
+%   Author: Beom Park
+%   Date: 01-Feb-2020; Last revision: 16-Feb-2020
 
 nPhase = length(State);
 mc = nan(nPhase,1);
 mcOpt = nan(nPhase,1);
 
 for iPhase = 1:nPhase
-	mLnrAddCon = 0;
-	mNlnrAddCon = 0;
+	mLnrAddCon = 0; % number of linear additional conditions
+	mNlnrAddCon = 0; % number of nonlinear additional conditions
 	
 	[~, mThrust, ~, ~, ~, mDefect, ~] = getPhaseStateInfo(State{iPhase});
 	
@@ -17,13 +33,12 @@ for iPhase = 1:nPhase
 		for iAddCon = 1:nAddCon
 			Con = Option.AddCon{iPhase, iAddCon};
 			isNlnr = strcmp(Con{1}, 'nlnr'); % is nonlinear
-			c = str2func(strcat('get',Con{3},'ConstraintNo'));
+			c = str2func(strcat('get',Con{3},'ConstraintNo')); % define function
 			if isNlnr
-				m = c(System{iPhase}, State{iPhase}, Spacecraft{iPhase}, ...,
-					Con);
+				m = c(System{iPhase}, State{iPhase}, Spacecraft{iPhase},	Con);
 				mNlnrAddCon = mNlnrAddCon + m;
 			else
-				mLnrAddCon = c(System{iPhase}, State{iPhase}, Spacecraft{iPhase}, ...
+				m = c(System{iPhase}, State{iPhase}, Spacecraft{iPhase}, ...
 					Con);
 				mLnrAddCon = mLnrAddCon + m;
 			end
