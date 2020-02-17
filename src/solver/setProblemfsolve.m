@@ -1,9 +1,9 @@
-function Problem = setProblemfsolve(System, State, Spacecraft, Option, ...
+function [Problem, State] = setProblemfsolve(System, State, Spacecraft, Option, ...
 	Collocation)
 %SETPROBLEMFSOLVE - sets Problem structure for the fsolve/newtonRaphson
 %
 %  Syntax:
-%     Problem = SETPROBLEMFSOLVE(System, State, Spacecraft, Option, ...
+%     [Problem, State] = SETPROBLEMFSOLVE(System, State, Spacecraft, Option, ...
 %		Collocation)
 %
 %  Description:
@@ -26,6 +26,7 @@ function Problem = setProblemfsolve(System, State, Spacecraft, Option, ...
 %			options - structure for the fsolve/newtonRaphson option
 %			solver - set to be 'fsolve'
 %			objective - the function to solve for zero
+%		State - after the slack variables are added
 %
 %  See also: LTOMAIN, SETPROBLEMFMINCON, FSOLVECONSTRAINTS
 %
@@ -52,6 +53,7 @@ for iPhase = 1:nPhase
 	end % iSegment for loop
 	Problem.x0 = [Problem.x0; State{iPhase}.state; ...
 		State{iPhase}.control; lambda];
+	State{iPhase}.slack = [];
 	State{iPhase}.slack = lambda;
 	
 	% currently only supports altitude constraint

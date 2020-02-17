@@ -44,7 +44,7 @@ for iPhase = 1:nPhase
 			end
 		end
 	end
-	mc(iPhase) = mDefect + mThrust + mLnrAddCon + mNlnrAddCon;
-	mcOpt(iPhase) = mDefect + mNlnrAddCon;
+	mc(iPhase) = mDefect + mThrust + mLnrAddCon + mNlnrAddCon; 
+	mcOpt(iPhase) = mDefect + mNlnrAddCon; % linear constraints are separate
 end
 end

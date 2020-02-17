@@ -96,7 +96,7 @@ Option.LTO = LToptset( ...
 	'FeasibilitySolver', true, ...
 	'Optimizer', false, ...
 	'MeshRefinement', false);
-Option.newton.maxIteration = 200;
+Option.newton.maxIteration = 1;
 Option.newton.fcnTolerance = 1e-12;
 Option.newton.stepTolerance = 1e-17;
 % Option.newton = []; % un comment this to use fsolve
@@ -145,8 +145,8 @@ Option.plot.optimize = {true, optPlotNumber, LPointVec};
 Option.AddCon{1, 1} = [];
 Option.AddCon{2, 1} = [];
 %
-% Option.AddCon{1, 1} = {'nlnr' ,'ineq', 'Altitude', 1, 30000};
-% Option.AddCon{1, 2} = {'nlnr', 'ineq', 'Altitude', 2, 7000};
+Option.AddCon{1, 1} = {'nlnr' ,'ineq', 'Altitude', 1, 30000};
+Option.AddCon{1, 2} = {'nlnr', 'ineq', 'Altitude', 2, 7000};
 %
 % Option.AddCon{2, 1} = {'nlnr', 'ineq', 'Altitude', 1, 30000};
 % Option.AddCon{2, 2} = {'nlnr', 'ineq', 'Altitude', 2, 7000};

@@ -35,31 +35,27 @@ iWhile = 1;
 
 while isFeasible && ~Option.doneFeasible
 	cprintf(-[1, 0, 0], 'Feasible: step no. %d\n', iWhile);
-	Problem = setProblemfsolve(System, State, Spacecraft, Option, ...
+	[Problem, State] = setProblemfsolve(System, State, Spacecraft, Option, ...
 		Collocation);
 	if ~isempty(Option.newton) % newton-raphson method
 		feasibleWithSlack = newtonRaphson(Problem);
-		feasibleVec = deleteSlackVariable(feasibleWithSlack, State, Option, 1, 0);
-		State = updateState(State, feasibleVec);
-      closestEncounter(System, State);
-		save('TEST2')
 	else % try fsolve
 		feasibleWithSlack = fsolve(Problem);
-		feasibleVec = deleteSlackVariable(feasibleWithSlack, State);
-		State = updateState(State, feasibleVec);
-      closestEncounter(System, State);
 	end % newton-raphson if loop
+	feasibleVec = deleteSlackVariable(feasibleWithSlack, State, Option);
+	State = updateState(State, feasibleVec);
+	closestEncounter(System, State);
 	
 	if Option.plot.feasible{1}
 		[earthPlot, moonPlot, lpPlot] = drawThrustArc(Option.plot.feasible{2}(1,iWhile), Option.plot.feasible{3}, ...
 			System, State, Spacecraft);
-      [initialPlot, interPhase, finalPlot] = drawEndPoints(Option.plot.feasible{2}(1,iWhile), System, State);
+		[initialPlot, interPhase, finalPlot] = drawEndPoints(Option.plot.feasible{2}(1,iWhile), System, State);
 		drawThrustHistory(Option.plot.feasible{2}(2,iWhile), ...
 			System, State, Spacecraft);
-% 		figure(Option.plot.feasible{2}(1,iWhile))
-% 		legend([initialPlot, interPhase, finalPlot, ...
-% 			 moonPlot, lpPlot], {'Initial', 'InterPhase', 'Final', ...
-% 		 'Moon', 'L_i'}, 'fontsize', 12);
+		% 		figure(Option.plot.feasible{2}(1,iWhile))
+		% 		legend([initialPlot, interPhase, finalPlot, ...
+		% 			 moonPlot, lpPlot], {'Initial', 'InterPhase', 'Final', ...
+		% 		 'Moon', 'L_i'}, 'fontsize', 12);
 		figure(Option.plot.feasible{2}(1,iWhile)+100)
 		legend([initialPlot, interPhase, finalPlot], {'Initial', 'InterPhase', ...
 			'Final'}, 'fontsize', 13);
@@ -88,22 +84,22 @@ jWhile = 1;
 
 while isOptimize && ~Option.doneOptimize
 	fprintf('Optimize: step no. %d\n', jWhile);
-	Problem = setProblemfmincon(System, State, Spacecraft, Option);
+	Problem = setProblemfmincon(System, State, Spacecraft, Option, Collocation);
 	optimizedWithSlack = fmincon(Problem);
-	optimizedVec = deleteSlackVariable(optimizedWithSlack, State, Option, 0, 1);
+	optimizedVec = deleteSlackVariable(optimizedWithSlack, State, Option);
 	State = updateState(State, optimizedVec);
-      closestEncounter(System, State);
+	closestEncounter(System, State);
 	
 	if Option.plot.optimize{1}
 		[~, moonPlot, lpPlot] = drawThrustArc(Option.plot.optimize{2}(1,jWhile), Option.plot.optimize{3}, ...
 			System, State, Spacecraft);
-      [initialPlot, interPhase, finalPlot] = drawEndPoints(Option.plot.optimize{2}(1,jWhile), System, State);
+		[initialPlot, interPhase, finalPlot] = drawEndPoints(Option.plot.optimize{2}(1,jWhile), System, State);
 		drawThrustHistory(Option.plot.optimize{2}(2,jWhile), ...
 			System, State, Spacecraft);
-% 		figure(Option.plot.optimize{2}(1,jWhile))
-% 		legend([initialPlot, interPhase, finalPlot, ...
-% 			moonPlot, lpPlot], {'Initial', 'InterPhase', 'Final', ...
-% 			'Earth', 'Moon', 'L_i'}, 'fontsize', 12);
+		% 		figure(Option.plot.optimize{2}(1,jWhile))
+		% 		legend([initialPlot, interPhase, finalPlot, ...
+		% 			moonPlot, lpPlot], {'Initial', 'InterPhase', 'Final', ...
+		% 			'Earth', 'Moon', 'L_i'}, 'fontsize', 12);
 		figure(Option.plot.optimize{2}(1,jWhile)+100)
 		legend([initialPlot, interPhase, finalPlot], {'Initial', 'InterPhase', ...
 			'Final'}, 'fontsize', 13);

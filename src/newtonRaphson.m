@@ -1,6 +1,30 @@
-% function Feasible = newtonRaphson(System, InitialGuess, Spacecraft, ...
-% 	Option, Collocation, Problem)
 function Feasible = newtonRaphson(Problem)
+%NEWTONRAPHSON - NewtonRaphson method to solve for zero
+%
+%  Syntax:
+%     Feasible = NEWTONRAPHSON(Problem)
+%
+%  Description:
+%     Uses NewtonRaphson method to solve for zero of the objective function
+%
+%  Inputs:
+%		Problem - structure that contains the following information
+%			x0 - initial guess
+%			options - structure with
+%				fcnTolerance - the tolerance to stop the iteration
+%				maxIteration - maximum number of iteration
+%			objective - function handle, it is set to be fsolveConstraint
+%
+%  Outputs:
+%     Feasible - column vector of converged state, control and also slack variables.
+%     Note that you need another function(deleteSlackVariable) to run it again
+%     after mesh refinement
+%
+%  See also: SETPROBLEMFSOLVE, FSOLVECONSTRAINT, DELETESLACKVARIABLE
+%
+%   Author: Beom Park
+%   Date: 01-Feb-2020; Last revision: 16-Feb-2020
+
 
 tol = Problem.options.fcnTolerance;
 iNewtonMax = Problem.options.maxIteration;

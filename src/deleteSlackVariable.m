@@ -1,74 +1,46 @@
-% Caution, only works for the altitude constraint
-
-function xShrink = deleteSlackVariable(x, State, Option, feasible, optimize)
+function xShrink = deleteSlackVariable(x, State, ~)
+%DELETESLACKVARIABLE - NewtonRaphson method to solve for zero
+%
+%  Syntax:
+%     xShrink = DELETESLACKVARIABLE(x, State, Option, isFeasible, isOptimize)
+%
+%  Description:
+%     Uses NewtonRaphson method to solve for zero of the objective function.
+%     Note that it used to be different for feasible/optimize solvers, but I
+%     changed them to be simple. 
+%
+%  Inputs:
+%		x - converged vector to be shrinked
+%		isFeasible/isOptimize - boolean
+%
+%  Outputs:
+%     xShrink - vector after its slack variables are all deleted.
+%
+%  See also: SETPROBLEMFSOLVE, SETPROBLEMFMINCON
+%
+%   Author: Beom Park
+%   Date: 01-Feb-2020; Last revision: 16-Feb-2020
 
 nPhase = length(State);
 
-xShrink = [];
+nx = getnx(State);
+nb = nan(nPhase, 1);
 
-if feasible
+
+% compute nb: number of parameters before the phase
 for iPhase = 1:nPhase
 	if iPhase == 1
-		nx(iPhase) = 0;
+		nb(1) = 0;
 	else
-		nSegment = State{iPhase-1}.nSegment; % number before the phase
-		if ~isempty(Option.AddCon{iPhase-1, 1})
-			nx(iPhase) = nx(iPhase-1) + 21*nSegment + 7 + 3*nSegment + nSegment + (3*nSegment + 1)*2;
-		else
-			nx(iPhase) = nx(iPhase-1) + 21*nSegment + 7 + 3*nSegment + nSegment; % with only thrust
-		end
+		nb(iPhase) = sum(nx(1:iPhase-1));
 	end
 end
 
 for iPhase = 1:nPhase
-	nSegment = State{iPhase}.nSegment;
-	nSlackThrust = nSegment;
-	if ~isempty(Option.AddCon{iPhase, 1})
-		nSlackAltitude = (3*nSegment + 1)*2;
-	else
-		nSlackAltitude = 0;
-	end
-	nNode = 3*nSegment + 1;
-	nState = 7*nNode;
-	nControl = 3*nSegment;
-	nState+nControl+1+nx(iPhase);
-	nState+nControl+nSlackThrust+nSlackAltitude+nx(iPhase);
-	x(nState+nControl+1+nx(iPhase):nState+nControl+nSlackThrust+nSlackAltitude+nx(iPhase)) = [];
-	nx = nx-nSlackThrust-nSlackAltitude;
-% 	xShrink = [xShrink; x(nx(iPhase)+1:nx(iPhase)+nState+nControl)];
-end
-end
-
-if optimize
-for iPhase = 1:nPhase
-	if iPhase == 1
-		nx(iPhase) = 0;
-	else
-		nSegment = State{iPhase-1}.nSegment; % number before the phase
-		if ~isempty(Option.AddCon{iPhase, 1})
-			nx(iPhase) = 21*nSegment + 7 + 3*nSegment + (3*nSegment + 1)*2;
-		else
-			nx(iPhase) = 21*nSegment + 7 + 3*nSegment; % with only thrust
-		end
-	end
-end
-
-for iPhase = 1:nPhase
-	nSegment = State{iPhase}.nSegment;
-	nSlackThrust = 0;
-	if ~isempty(Option.AddCon{iPhase, 1})
-		nSlackAltitude = (3*nSegment + 1)*2;
-	else
-		nSlackAltitude = 0;
-	end
-	nNode = 3*nSegment + 1;
-	nState = 7*nNode;
-	nControl = 3*nSegment;
-	x(nState+nControl+1+nx(iPhase):nState+nControl+nSlackThrust+nSlackAltitude+nx(iPhase)) = [];
-	nx = nx-nSlackThrust-nSlackAltitude;
-end
-	
-
+	[~, ~, ~, nState, nControl, ~, nSlack] = ...
+		getPhaseStateInfo(State{iPhase});
+	x(nState+nControl+1+nb(iPhase) : nState+nControl+nSlack+nb(iPhase)) = [];
+	nb = nb-nSlack;
 end
 
 xShrink = x;

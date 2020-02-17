@@ -1,4 +1,4 @@
-function Problem = setProblemfmincon(System, State, Spacecraft, Option)
+function [Problem, State] = setProblemfmincon(System, State, Spacecraft, Option, Collocation)
 
 nPhase = length(State);
 
@@ -51,16 +51,6 @@ Problem.solver = 'fmincon';
 %% set objective function
 Problem.objective = @(x) fminconObjective(x, iFinalMass);
 
-[phi, phiPrime, phiMeshAdd] = LGL_7th_coefficient;
-Collocation.phi = phi;
-Collocation.phiPrime = phiPrime;
-Collocation.phiMeshAdd = phiMeshAdd;
-Collocation.tau = [-1, -0.830223896278567, -0.468848793470714, 0, ...
-	0.468848793470714, 0.830223896278567, 1];
-tau = Collocation.tau;
-Collocation.tauRatio = (tau - ones(1, 7)*tau(1))/2;
-
-
 %% set linear equality constraints
 
 % These were commented, since I am using m = 1 as the continuity constraint
@@ -98,7 +88,6 @@ Problem.ub = ub;
 %% set nonlinear constraint
 
 Problem.nonlcon = @(x) fminconConstraint(x, System, State, Spacecraft, ...
-	Option, Collocation); % working on it!
-
+	Option, Collocation); 
 
 end

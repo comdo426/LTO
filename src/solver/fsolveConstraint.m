@@ -52,15 +52,20 @@ phaseFin = zeros(7, nPhase);
 
 m = sum(mc) + mContinuityTTL; % row number of constraint
 n = length(x); % column number of variables
+if n ~= sum(nx)
+	error('Number of parameters wrong')
+end
 
 F = nan(m, 1);
 dF = zeros(m, n);
 
 tstar = nan(nPhase,1);
 
+%% iPhase loop
+
 for iPhase = 1:nPhase
 	
-	%% Information from the input
+	%% setting numbers for each phase
 	
 	isCR3BP = strcmp(System{iPhase}.dynamics(1), 'CR3BP');
 	is2BP = strcmp(System{iPhase}.dynamics(1), '2BP');
@@ -72,7 +77,7 @@ for iPhase = 1:nPhase
 		getPhaseStateInfo(State{iPhase});
 	t = t + State{iPhase}.t0; % Add the offset from phasing(if needed)
 	[thrustMaxND, ispND, g0ND] = getSpacecraftInfo(Spacecraft{iPhase});
-	% nb: number of parameters before the i-th phase
+	% nb: Number of parameters Before the i-th phase
 	if iPhase == 1
 		nb = 0;
 		mb = 0;
@@ -97,55 +102,52 @@ for iPhase = 1:nPhase
 		u(:, 1) = x(nState + 3*(i-1)+1 +nb: nState + 3*i + nb);
 		% time step at each segment
 		dt = t(i+1) - t(i);
-		% Defect constraint at each node
-		
 		
 		if isCR3BP
-			FDefect = defectConstraint(mu, Y, u, t(i), dt, Collocation, ispND, g0ND);
+			FDefect = ...
+				defectConstraint(mu, Y, u, t(i), dt, Collocation, ispND, g0ND);
 			[dFx, dFu] = dFDefect(mu, Y, u, t(i), dt, Collocation, ispND, g0ND);
 		end
 		
 		if is2BP
-			FDefect = defectConstraint2BP(mu, Y, u, t(i), dt, Collocation, ispND, g0ND);
+			FDefect = ...
+				defectConstraint2BP(mu, Y, u, t(i), dt, Collocation, ispND, g0ND);
 			[dFx, dFu] = dFDefect2BP(mu, Y, u, t(i), dt, Collocation, ispND, g0ND);
 		end
 		
-		F(21*(i-1)+1 + mb: 21*i + mb, 1) = FDefect;
-		dF(21*(i-1)+1+mb: 21*i+mb, 28*(i-1)+1-7*cnt+nb: 28*(i-1)+28-7*cnt+nb) = dFx;
-		dF(21*(i-1)+1+mb: 21*i+mb, nState+3*(i-1)+1+nb: nState+3*i+nb) = dFu;
-		
-		% slack variable dF at each node
+		F(21*(i-1)+1+mb : 21*i+mb, 1) = FDefect;
+		dF(21*(i-1)+1+mb : 21*i+mb, ...
+			28*(i-1)+1-7*cnt+nb : 28*(i-1)+28-7*cnt+nb) = dFx;
+		dF(21*(i-1)+1+mb : 21*i+mb, nState+3*(i-1)+1+nb : nState+3*i+nb) = dFu;
 		
 		%% Thrust slack constraint
 		% slack variable at each segment
 		lambda = x(nState + nControl + i + nb);
 		mThrust = nSegment;
 		nThrust = nSegment;
-		% slack variable constraint at each node
-		% 		FPhase(nDefect + i, 1) = u(1) - thrustMaxND*sin(lambda)^2;
-		% 		dFPhase(nDefect+i, nState+3*(i-1)+1) = 1;
-		% 		dFPhase(nDefect+i, nState+nControl+i) = -2*thrustMaxND*sin(lambda)*cos(lambda);
 		F(mDefect + i + mb, 1) = u(1) - thrustMaxND*sin(lambda)^2;
 		dF(mDefect + i + mb, nState + 3*(i-1)+1 + nb) = 1;
 		dF(mDefect + i + mb, nState + nControl + i +nb) = ...
 			-2*thrustMaxND*sin(lambda)*cos(lambda);
 		
+		% initial/final state at each phase		
 		if i == 1
 			phaseIni(:, iPhase) = x1;
 		end
 		if i == nSegment
 			phaseFin(:, iPhase) = x7;
 		end
+		
 		% increment on index
 		cnt = cnt + 1;
 	end % iSegment for loop
-	
 	
 	%% Additional constraints
 	if ~isempty(Option.AddCon{iPhase, 1})
 		
 		for iNode = 1:nNode
 			
+			% Note that some of the below is written only for altitude constraint.
 			sigma1 = x(nState + nControl + nThrust + iNode + nb);
 			nSigma1 = nNode;
 			mSigma1 = nNode;
@@ -187,6 +189,7 @@ for iPhase = 1:nPhase
 			F(mt+nIniCon+7*(iPhase-2)+1: mt+nIniCon+7*(iPhase-1)) = ...
 				phaseIni(:,iPhase) - phaseFin(:,iPhase-1);
 		else % different dynamics: need to rotate
+			% Julian Day to be added from the previous time
 			JDAdd = State{iPhase-1}.timeSegment(end)*tstar(iPhase-1)/60/60/24;
 			phaseFinNew = interPhaseCont(phaseFin(:,iPhase-1), System{iPhase-1}, ...
 				System{iPhase}, State{iPhase-1}.JD0+JDAdd);
@@ -229,7 +232,5 @@ for iPhase = 1:nPhase
 	end
 	
 end % iPhase for loop
-
-save('TEST')
 
 end

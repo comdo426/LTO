@@ -1,9 +1,28 @@
 function State = updateState(State, x)
+%UPDATESTATE - update the converged solution to the State cell
+%
+%  Syntax:
+%     State = UPDATESTATE(State, x)
+%
+%  Description:
+%     replace the vectors within State cell to the converged solution
+%
+%  Inputs:
+%		State - old State cell to be updated
+%		x - converged solution from feasible/optimize solvers
+%
+%  Outputs:
+%     State - new State cell after the update
+%
+%  See also: GETPHASESTATEINFO, GETNX
+%
+%   Author: Beom Park
+%   Date: 01-Feb-2020; Last revision: 16-Feb-2020
 
 nPhase = length(State);
 
+% reset slack vectors to blank
 for iPhase = 1:nPhase
-	
 	State{iPhase}.slack = [];
 end
 
@@ -19,12 +38,6 @@ for iPhase = 1:nPhase
 	end
 	State{iPhase}.state = x(1+nb:nState+nb);
 	State{iPhase}.control = x(1+nState+nb:nState+nControl+nb);
-	
-	
-end
-
-
-
-
+end % iPhase for loop
 
 end
