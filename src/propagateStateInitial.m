@@ -1,5 +1,5 @@
 function stateRev = propagateStateInitial(s, tSegment, stateInitial, ...
-	includeLast, SystemPhase)
+	~, SystemPhase)
 %PROPAGATESTATEINITIAL - propagates with a givn initial state(6D)
 %
 %  Syntax:
@@ -24,11 +24,11 @@ function stateRev = propagateStateInitial(s, tSegment, stateInitial, ...
 %			stateRev(end, :) is the state at tSegment(end-1).
 %			[1,1] = size(includeLast); logical = class(includeLast)
 %		SystemPhase - System at each phase. This is needed for the mu value of the
-%			CR3BP propagation. 
+%			CR3BP propagation.
 %			[1,1] = size(SystemPhase); struct = class(SystemPhase)
 %
 %  Outputs:
-%     stateRev - matrix with the propagated states 
+%     stateRev - matrix with the propagated states
 %			[3*s+1, 7] OR [3*s, 7] = size(stateRev); double = class(stateRev)
 %			Note that the size depends on the boolean value of includeLast
 %
@@ -54,15 +54,13 @@ for iSegment = 1:s
 		tNode(itau) = tSegment(iSegment) + dtSegment*(tau(itau)+1)/2;
 	end % itau for loop
 	[~, state] = ode113(@(t,y) CR3BP(t,y,mu,1,0), [tNode(1), tNode(3)], ...
-		stateRev(3*(iSegment-1)+1, 1:6), opts);
-	stateRev(3*(iSegment-1)+2, :) = [state(end, :), 1];
+		stateRev(4*(iSegment-1)+1, 1:6), opts);
+	stateRev(4*(iSegment-1)+2, :) = [state(end, :), 1];
 	[~, state] = ode113(@(t,y) CR3BP(t,y,mu,1,0), [tNode(3), tNode(5)], ...
-		stateRev(3*(iSegment-1)+2, 1:6), opts);
-	stateRev(3*(iSegment-1)+3, :) = [state(end, :), 1];
-	if iSegment < s || includeLast
-		[~, state] = ode113(@(t,y) CR3BP(t,y,mu,1,0), [tNode(1), tNode(3)], ...
-			stateRev(3*(iSegment-1)+3, 1:6), opts);
-		stateRev(3*(iSegment-1)+4, :) = [state(end, :), 1];
-	end
+		stateRev(4*(iSegment-1)+4, 1:6), opts);
+	stateRev(4*(iSegment-1)+4, :) = [state(end, :), 1];
+	[~, state] = ode113(@(t,y) CR3BP(t,y,mu,1,0), [tNode(5), tNode(7)], ...
+		stateRev(4*(iSegment-1)+4, 1:6), opts);
+	stateRev(4*(iSegment-1)+4, :) = [state(end, :), 1];
 end % iSegment for loop
 end

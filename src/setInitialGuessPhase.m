@@ -23,19 +23,18 @@ else
 end
 
 % state formulation
-stateMatrix = nan(3*nSegment+1, 7);
+stateMatrix = nan(4*nSegment, 7);
 for iRev = 1:intRev
 	if iRev < intRev
-		stateMatrix(3*s*(iRev-1)+1:3*s*iRev, :) = stateOneRev;
+		stateMatrix(4*s*(iRev-1)+1:4*s*iRev, :) = stateOneRev;
 	elseif isInt
-		stateMatrix(3*s*(iRev-1)+1:3*s*iRev+1, :) = ...
-			[stateOneRev; [stateInitial, 1]];
+		stateMatrix(4*s*(iRev-1)+1:4*s*iRev, :) = stateOneRev;
 	else
-		stateMatrix(3*s*(iRev-1)+1:3*s*iRev, :) = stateOneRev;
-		stateMatrix(3*s*iRev+1:3*nSegment+1, :) = stateExtra;
+		stateMatrix(4*s*(iRev-1)+1:4*s*iRev, :) = stateOneRev;
+		stateMatrix(4*s*iRev+1:4*nSegment, :) = stateExtra;
 	end % if loop
 end % iRev for loop
-stateArray = reshape(stateMatrix', [7*(3*nSegment + 1), 1]);
+stateArray = reshape(stateMatrix', [7*4*nSegment, 1]);
 
 % time formulation
 time = nan(nSegment+1, 1);
