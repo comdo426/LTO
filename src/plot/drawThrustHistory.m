@@ -5,11 +5,12 @@ figure(figureNo);
 hold on
 
 isSame = isequaln(System{1}.dynamics, System{2}.dynamics);
+tContinuity = 0;
 if isSame
 	for iPhase = 1:nPhase
 
 		tstar = System{iPhase}.parameter.tstar;
-		t = State{iPhase}.timeSegment;
+		t = State{iPhase}.timeSegment + tContinuity;
 		[thrustMaxND, ~, ~, thrustMaxD] = getSpacecraftInfo(Spacecraft{iPhase});
 		[~, ~, controlMat] = getStateControlMat(State{iPhase});
 		tday = t*tstar/60/60/24;
@@ -22,7 +23,7 @@ if isSame
 		h2 = stairs(tday, [Tx; Tx(end)], 'r', 'linewidth', 1.5);
 		h3 = stairs(tday, [Ty; Ty(end)], 'g', 'linewidth', 1.5);
 		h4 = stairs(tday, [Tz; Tz(end)], 'b', 'linewidth', 1.5);
-
+		tContinuity = t(end);
 	end
 else
 	for iPhase = 1:nPhase

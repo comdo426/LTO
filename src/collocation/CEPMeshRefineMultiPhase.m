@@ -7,7 +7,7 @@ function [State, Option] = ...
 %		CEPMESHREFINEMULTIPHASE(System, State, Spacecraft, Option)
 %
 %  Description:
-%     refines mesh with CEP method. 
+%     refines mesh with CEP method.
 %
 %  Inputs:
 %		Option - contains the information about the mesh refinement settings
@@ -38,10 +38,18 @@ for j = 1:nPhase
 	
 end
 
-if all(doneMesh == 1)
-	Option.doneMesh = 1;
+if Option.removeMesh
+	if all(doneMesh == 1)
+		Option.removeMesh = false;
+	else
+		Option.removeMesh = true;
+	end
 else
-	Option.doneMesh = 0;
+	if all(doneMesh == 1)
+		Option.doneMesh = true;
+	else
+		Option.doneMesh = false;
+	end
 end
-   
+
 end

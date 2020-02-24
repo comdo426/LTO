@@ -1,5 +1,6 @@
 function StateMerged = mergePhase(State)
 
+
 StateMerged = cell(1,1);
 
 StateMerged{1}.state = [];

@@ -58,7 +58,7 @@ phaseFin = zeros(7, nPhase);
 
 m = sum(mcOpt) + mContinuityTTL; % row number of constraint
 n = length(x); % column number of variables
-if n ~= sum(nx)
+if n ~= sum(nxOpt)
 	error('Number of parameters wrong')
 end
 

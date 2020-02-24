@@ -1,13 +1,42 @@
-function [earthPlot, moonPlot, lpPlot] = drawThrustArc(figureNo, LPointVec, System, State, Spacecraft)
+function [earthPlot, moonPlot, lpPlot] = ...
+	drawThrustArc(figureNo, LPointVec, System, State, Spacecraft)
+%DRAWTHRUSTARC - draw the trajectory arc after convergence
+%
+%  Syntax:
+%     [earthPlot, moonPlot, lpPlot] = ...
+%		DRAWTHRUSTARC(figureNo, LPointVec, System, State, Spacecraft)
+%
+%  Description:
+%     draws the trajectory arc after convergence. It currently supports EM CR3BP
+%     or EM-CR3BP + Sun centered conic. It needs to be generalized for other
+%     dynamics model. 
+%
+%  Inputs:
+%		figureNo - number of the figure to draw on
+%		LPointVec - vector that contains the number of Lagrangain points
+%
+%  Outputs:
+%     earthPlot - plot handle for Earth
+%		moonPlot - plot handle for moon
+%		lpPlot - ploot handle for Lagrangian points
+%
+%	See also: DRAWENDPOINTS, LTOMAIN
+%
+%   Author: Beom Park
+%   Date: 01-Feb-2020; Last revision: 17-Feb-2020
 
 % mu = System{1}.parameter.mu;
 nPhase = length(State);
 
+% First figure for the rotating frame
 figure(figureNo)
 commonAxisSetting;
 CR3BPAxisSetting;
+
+% Second figure for the inertial frame
 figure(figureNo+100)
 commonAxisSetting;
+
 earthPlot = [];
 moonPlot = [];
 lpPlot = [];

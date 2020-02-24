@@ -83,13 +83,13 @@ jWhile = 1;
 
 while isOptimize && ~Option.doneOptimize
 	cprintf(-[1, 0, 0], 'Optimize: step no. %d\n', jWhile);
-	Problem = setProblemfmincon(System, State, Spacecraft, Option, Collocation);
+	[Problem, State] = setProblemfmincon(System, State, Spacecraft, Option, Collocation);
 	optimizedWithSlack = fmincon(Problem);
 	optimizedVec = deleteSlackVariable(optimizedWithSlack, State, Option);
 	State = updateState(State, optimizedVec);
 	closestEncounter(System, State);
 	if Option.plot.optimize{1}
-		[~, moonPlot, lpPlot] = drawThrustArc(Option.plot.optimize{2}(1,jWhile), Option.plot.optimize{3}, ...
+		drawThrustArc(Option.plot.optimize{2}(1,jWhile), Option.plot.optimize{3}, ...
 			System, State, Spacecraft);
 		[initialPlot, interPhase, finalPlot] = drawEndPoints(Option.plot.optimize{2}(1,jWhile), System, State);
 		drawThrustHistory(Option.plot.optimize{2}(2,jWhile), ...

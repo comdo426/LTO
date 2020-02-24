@@ -12,9 +12,9 @@ end
 
 stateOneRev = propagateStateInitial(s, tOneRev, stateInitial, false, SystemPhase);
 
-if isInt
+if isInt % for integer revolutions
 	nSegment = s*nRev;
-else
+else % for non-integer revolutions
 	extraRev = nRev - intRev; % What is the 0.xxxx revolution remaining?
 	sExtra = ceil(s*extraRev); % additional number of the segments for the extra rev
 	tExtra = linspace(0, period*extraRev, sExtra+1)';

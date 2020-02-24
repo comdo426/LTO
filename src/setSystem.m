@@ -27,8 +27,8 @@ function System = setSystem(nPhase, phaseBody)
 %
 %  Examples:
 %     nPhase = 2;
-%		phaseBody{1,1} = {'Earth', 'Moon'};
-%		phaseBody{2,1} = {'Earth', 'Moon'};
+%		phaseBody{1,1} = {'EARTH', 'MOON'};
+%		phaseBody{2,1} = {'EARTH', 'MOON'};
 %		System = setSystem(nPhase, phaseBody);
 %
 %  Other m-files required: SETGLOBALVARIABLE
@@ -111,6 +111,7 @@ global SMA_EARTHMOON
 global SMA_MARSDEIMOS
 setGlobalVariable
 
+
 if strcmp(P1, 'EARTH')
 	if strcmp(P2, 'MOON')
 		SystemCR3BP.mu = MU_MOON/(MU_EARTH+MU_MOON);
@@ -119,7 +120,7 @@ if strcmp(P1, 'EARTH')
 		SystemCR3BP.mu1 = MU_EARTH;
 		SystemCR3BP.mu2 = MU_MOON;
 	else
-		fprintf('Phase no. %d: Only supports E-M CR3BP', iPhase);
+		fprintf('Phase no. %d: Only supports E-M CR3BP\n', iPhase);
 	end
 elseif strcmp(P1, 'SUN')
 	if strcmp(P2, 'EARTH')
@@ -135,10 +136,10 @@ elseif strcmp(P1, 'SUN')
 		SystemCR3BP.mu1 = MU_SUN;
 		SystemCR3BP.mu2 = MU_MARS;
 	else
-		fprintf('Phase no. %d: Only supports S-E, S-M CR3BP', iPhase);
+		fprintf('Phase no. %d: Only supports S-E, S-M CR3BP\n', iPhase);
 	end
 else
-	fprintf('Phase no. %d: P1 should be Earth or Sun', iPhase);
+	fprintf('Phase no. %d: P1 should be Earth or Sun\n', iPhase);
 end
 
 

@@ -56,7 +56,7 @@ Collocation = setCollocation;
 tauRatio = Collocation.tauRatio;
 phiMeshAdd = Collocation.phiMeshAdd;
 
-if Option.removeMesh == 1
+if Option.removeMesh
 	
 	%% Remove
 	
@@ -122,11 +122,12 @@ if Option.removeMesh == 1
 		t(rN(:)+1) = [];
 		StatePhase.timeSegment = t;
 		StatePhase.nSegment = length(t)-1;
+		doneMeshPhase = false;
+	else
+		doneMeshPhase = true;
 	end
 	
-	doneMeshPhase = 0;
 else
-	Option.removeMesh = 0;
 	
 	%% Add
 	k = 1;
@@ -202,9 +203,9 @@ else
 		t = sort([t; tAdd']);
 		StatePhase.timeSegment = t;
 		StatePhase.nSegment = length(t)-1;
-		doneMeshPhase = 0;
+		doneMeshPhase = false;
 	else % if aN is empty, or no mesh to add
-		doneMeshPhase = 1;
+		doneMeshPhase = true;
 	end
 end
 

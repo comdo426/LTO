@@ -93,7 +93,8 @@ for iPhase = 1:nPhase
 	end
 	
 	InitialGuess{iPhase, 1}.slack = [];
-	InitialGuess{iPhase, 1}.t0 = 0; % Time offset of the rotating frame, default is zero
+	InitialGuess{iPhase, 1}.t0 = 0;
+	InitialGuess{iPhase, 1}.period = period;
 	
 
 end % iPhase for loop
