@@ -29,15 +29,15 @@ end
 nx = getnx(State);
 
 for iPhase = 1:nPhase
-	[~, ~, ~, nState, nControl, ~, ~] = getPhaseStateInfo(State{iPhase});
+	[~, nSegment, ~, nState, nControl, ~, ~] = getPhaseStateInfo(State{iPhase});
 	
 	if iPhase == 1
 		nb = 0;
 	else
 		nb = sum(nx(1:iPhase-1));
 	end
-	State{iPhase}.state = x(1+nb:nState+nb);
-	State{iPhase}.control = x(1+nState+nb:nState+nControl+nb);
+	State{iPhase}.state = reshape(x(1+nb:nState+nb), [7, 4*nSegment])';
+	State{iPhase}.control = reshape(x(1+nState+nb:nState+nControl+nb), [3, nSegment])';
 end % iPhase for loop
 
 end

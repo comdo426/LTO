@@ -93,6 +93,4 @@ end
 %% set solver
 Problem.solver = 'fsolve';
 
-save('TEST')
-
 end

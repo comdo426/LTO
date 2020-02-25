@@ -43,6 +43,7 @@ while isFeasible && ~Option.doneFeasible
 		feasibleWithSlack = fsolve(Problem);
 	end % newton-raphson if loop
 	feasibleVec = deleteSlackVariable(feasibleWithSlack, State, Option);
+	
 	State = updateState(State, feasibleVec);
 	closestEncounter(System, State);
 	
@@ -75,7 +76,6 @@ end % isFeasible, ~Option.doneFeasible while loop
 
 
 cprintf(-[1, 0, 0], 'Feasible done!\n');
-
 
 %% Optimize
 

@@ -46,26 +46,22 @@ for i = 2:8
 	end
 end
 
-% (5, 8)       
-Xi_mesh_add = [1, tauAdd(2), tauAdd(2)^2, tauAdd(2)^3, tauAdd(2)^4, tauAdd(2)^5, tauAdd(2)^6, tauAdd(2)^7;
-                        1, tauAdd(3), tauAdd(3)^2, tauAdd(3)^3, tauAdd(3)^4, tauAdd(3)^5, tauAdd(3)^6, tauAdd(3)^7;
-                        1, tauAdd(4), tauAdd(4)^2, tauAdd(4)^3, tauAdd(4)^4, tauAdd(4)^5, tauAdd(4)^6, tauAdd(4)^7;
-                        1, tauAdd(5), tauAdd(5)^2, tauAdd(5)^3, tauAdd(5)^4, tauAdd(5)^5, tauAdd(5)^6, tauAdd(5)^7;
-                        1, tauAdd(6), tauAdd(6)^2, tauAdd(6)^3, tauAdd(6)^4, tauAdd(6)^5, tauAdd(6)^6, tauAdd(6)^7];
+BAdd = nan(8,5);
+BAdd(1,:) = [1,1,1,1,1];
+for i = 2:8
+	for j = 1:5
+		BAdd(i,j) = tauAdd(j+1)^(i-1);
+	end
+end
 
 invA = inv(A);
-
-% 
-% phi = Xi*invA;
-% phiPrime = Xi_dot*invA;
-% phiMeshAdd = Xi_mesh_add*invA;
 
 Collocation.invA = invA;
 Collocation.B = B;
 Collocation.D = D;
-% Collocation.phiMeshAdd = phiMeshAdd;
-% Collocation.tau = tau;
-% % Collocation.tauAdd = tauAdd;
+Collocation.BAdd = BAdd;
+Collocation.tau = tau;
+Collocation.tauAdd = tauAdd;
 Collocation.tauRatio = (tau' - ones(1, 7)*tau(1))/2;
 
 end

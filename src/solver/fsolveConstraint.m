@@ -91,12 +91,9 @@ for iPhase = 1:nPhase
 		mb = sum(mc(1:iPhase-1));
 	end
 	
-	% index initialization
-	cnt = 0;
-	
-	Y(:, :, :) = reshape(x(1:nState), [7,4,nSegment]);
+	Y = reshape(x(1+nb:nState+nb), [7,4,nSegment]);
 	% TODO - check that this does not break after the first segment;
-	uColumn(:,1,:) = reshape(x(nState+1:nState+nControl), [3,1,nSegment]);
+	uColumn = reshape(x(nState+1+nb:nState+nControl+nb), [3,1,nSegment]);
 	UVar = repmat(uColumn, [1,4,1]);
 	UDef = repmat(uColumn, [1,3,1]);
 	
@@ -171,8 +168,13 @@ for iPhase = 1:nPhase
 	
 	%% Continuity between segments
 	
-	FCont = nan(7*(nSegment-1), 1);
-	dFCont = zeros(7*(nSegment-1), n);
+	if nSegment > 1
+		FCont = nan(7*(nSegment-1), 1);
+		dFCont = zeros(7*(nSegment-1), nx(iPhase));
+	else
+		FCont = [];
+		dFCont = [];
+	end
 	
 	mCont = 7*(nSegment-1);
 	
@@ -190,16 +192,15 @@ for iPhase = 1:nPhase
 	% 	ThrustVec = reshape(uColumn(1,1,:), [nSegment, 1]);
 	% 	FThrust = ThrustVec - thrustMaxND.*sin(lambdaVec).^2;
 	FThrust = zeros(mThrust, 1);
-	dFThrust = zeros(mThrust, n);
+	dFThrust = zeros(mThrust, nx(iPhase));
 	
 	for i = 1:nSegment
 		lambda = x(nState + nControl + i + nb);
 		FThrust(i) = uColumn(1,1,i) - thrustMaxND*sin(lambda)^2;
-		dFThrust(i + mb, nState + 3*(i-1)+1 + nb) = 1;
-		dFThrust(i + mb, nState + nControl + i +nb) = ...
+		dFThrust(i, nState + 3*(i-1)+1) = 1;
+		dFThrust(i, nState + nControl + i) = ...
 			-2*thrustMaxND*sin(lambda)*cos(lambda);
 	end
-	
 	
 	
 	F(1+mb:mc(iPhase)+mb) = [FDefect; FCont; FThrust];
@@ -302,10 +303,5 @@ for iPhase = 1:nPhase
 	end
 	
 end % iPhase for loop
-
-
-	
-	save('TEST2')
-	return;
 
 end

@@ -9,18 +9,19 @@ commonAxisSetting
 nPhase = length(State);
 
 
-isSame = isequaln(System{1}.dynamics, System{2}.dynamics);
+% isSame = isequaln(System{1}.dynamics, System{2}.dynamics);
+isSame = 1;
 
 if isSame
 	
 	%% initialpoint
 	
-	initialPoint = State{1}.state(1:3);
+	initialPoint = State{1}.initialConstraint;
 	initial = plot3(initialPoint(1), initialPoint(2), initialPoint(3), '^k', 'linewidth', 2.0);
 	
 	%% finalpoint
 	
-	finalPoint = State{nPhase}.state(end-6:end-4);
+	finalPoint = State{nPhase}.finalConstraint;
 	final = plot3(finalPoint(1), finalPoint(2), finalPoint(3), 'vk', 'linewidth', 2.0);
 	
 	%% intermediatePoint
@@ -30,7 +31,7 @@ if isSame
 		
 		
 		for iPhase = 1:nPhase-1
-			interPoint(iPhase, :) = State{iPhase+1}.state(1:3);
+			interPoint(iPhase, :) = State{iPhase+1}.state(1, 1:3);
 		end
 		
 		

@@ -58,9 +58,9 @@ Setup.Phase{2,1}.orbitSelect = {'JC', 3.015};
 % Setup.Phase{1,1}.orbitData = load('DRO.mat');
 % Setup.Phase{2,1}.orbitData = load('L4SPO.mat');
 
-Setup.Phase{1,1}.s = 17; % Number of segments per rev
+Setup.Phase{1,1}.s = 18; % Number of segments per rev
 Setup.Phase{1,1}.nRev = 2; % Total rev for the orbit stack
-Setup.Phase{2,1}.s = 17;
+Setup.Phase{2,1}.s = 18;
 Setup.Phase{2,1}.nRev = 2;
 
 LPointVec = [1 2];
@@ -78,26 +78,24 @@ fin = plot3(InitialGuess{2}.finalConstraint(1), ...
 	InitialGuess{2}.finalConstraint(2), ...
 	InitialGuess{2}.finalConstraint(3), 'vk', 'linewidth', 2.0);
 
-if Setup.plot{1}
-	for iPhase = 1:nPhase
-		[stateMat, stateSegmentMat, ~] = getStateControlMat(InitialGuess{iPhase});
-		figure(Setup.plot{2})
-		commonAxisSetting;
-		CR3BPAxisSetting;
-% 		plot3(stateSegmentMat(:,1), stateSegmentMat(:,2), stateSegmentMat(:,3), ...
-% 			'k.', 'linewidth', 2.0)
-		plot3(stateMat(:,1), stateMat(:,2), stateMat(:,3), 'k-', 'linewidth', 1.0);
-	end	
-	mu = System{iPhase}.parameter.mu;
-% 	earthPlot = drawEarth(mu);
-	moonPlot = drawMoon(mu);
-	lpPlot = drawLagrangianPoints(mu, Setup.plot{3});
+mu = System{1}.parameter.mu;
+moonPlot = drawMoon(mu);
+lpPlot = drawLagrangianPoints(mu, Setup.plot{3});
+
+for iPhase = 1:nPhase
+	plot3(InitialGuess{iPhase}.state(:,1), ...
+		InitialGuess{iPhase}.state(:,2), ...
+		InitialGuess{iPhase}.state(:,3), 'b-', 'linewidth', 1.0);
+	% TODO - make a function that computes the segment 
+	index = getIndexSegment(InitialGuess{iPhase});
+	plot3(InitialGuess{iPhase}.state(index,1), ...
+		InitialGuess{iPhase}.state(index,2), ...
+		InitialGuess{iPhase}.state(index,3), 'k.', 'linewidth', 2.0);
 end
 legend([ini, fin, moonPlot, lpPlot], ...
 	{'Initial', 'Final', 'Moon', 'Li'}, 'fontsize', 13);
 xlabel('x(n.d.)', 'fontsize', 13)
 ylabel('y(n.d.)', 'fontsize', 13)
-
 
 %% Spacecraft specs
 
@@ -144,7 +142,7 @@ Option.fmincon = optimoptions( ...
 	'FiniteDifferenceType', 'central', ...
 	'ConstraintTolerance', 1e-13, ...
 	'OptimalityTolerance', 1e-6, ...
-	'maxiteration', 1000000, ...
+	'maxiteration', 100000, ...
 	'InitBarrierParam', 1e-4);
 
 Option.doneFeasible = false;
@@ -163,8 +161,8 @@ Option.plot.optimize = {true, optPlotNumber, LPointVec};
 Option.AddCon{1, 1} = [];
 Option.AddCon{2, 1} = [];
 %
-Option.AddCon{1, 1} = {'nlnr' ,'ineq', 'Altitude', 1, 30000};
-Option.AddCon{1, 2} = {'nlnr', 'ineq', 'Altitude', 2, 2000};
+% Option.AddCon{1, 1} = {'nlnr' ,'ineq', 'Altitude', 1, 30000};
+% Option.AddCon{1, 2} = {'nlnr', 'ineq', 'Altitude', 2, 2000};
 %
 % Option.AddCon{2, 1} = {'nlnr', 'ineq', 'Altitude', 1, 30000};
 % Option.AddCon{2, 2} = {'nlnr', 'ineq', 'Altitude', 2, 7000};

@@ -45,14 +45,17 @@ lpPlot = [];
 % lpPlot = drawLagrangianPoints(mu, LPointVec);
 
 % NOTE: temporary change to make it work for CR3BP - 2BP
-isSame = isequaln(System{1}.dynamics, System{2}.dynamics);
+% isSame = isequaln(System{1}.dynamics, System{2}.dynamics);
+isSame = 1;
 
 if isSame
 	
 	for iPhase = 1:nPhase
 		[~, nSegment, ~, ~, ~, ~, ~] = getPhaseStateInfo(State{iPhase});
-		[stateMat, stateSegmentMat, controlMat] = ...
-			getStateControlMat(State{iPhase});
+		stateMat = State{iPhase}.state;
+		controlMat = State{iPhase}.control;
+		indexSegment = getIndexSegment(State{iPhase});
+		stateSegmentMat = stateMat(indexSegment, :);
 		for i = 1:nSegment
 			if controlMat(i, 1) > 0.1*Spacecraft{iPhase}.thrustMaxND
 				color = [1 0 0];
@@ -60,8 +63,8 @@ if isSame
 				color = [0 0 1];
 			end
 			figure(figureNo)
-			plot3(stateMat(3*(i-1)+1:3*i+1,1), stateMat(3*(i-1)+1:3*i+1,2), ...
-				stateMat(3*(i-1)+1:3*i+1,3), 'Color', color, ...
+			plot3(stateMat(4*(i-1)+1:4*i,1), stateMat(4*(i-1)+1:4*i,2), ...
+				stateMat(4*(i-1)+1:4*i,3), 'Color', color, ...
 				'linewidth', 1.5);
 		end
 		figure(figureNo)

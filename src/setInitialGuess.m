@@ -99,7 +99,7 @@ for iPhase = 1:nPhase
    
    if iPhase == nPhase
       InitialGuess{iPhase, 1}.finalConstraint = ...
-         InitialGuess{iPhase,1}.state(end, 1:6)'; % open to change, only constrain 6 states
+         InitialGuess{iPhase,1}.state(1, 1:6)'; % open to change, only constrain 6 states
    end
    
    

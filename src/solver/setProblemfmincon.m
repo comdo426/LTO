@@ -36,8 +36,15 @@ nPhase = length(State);
 Problem.x0 = [];
 
 for iPhase = 1:nPhase
+
+	nSegment = State{iPhase}.nSegment;
+	stateMat = State{iPhase}.state;
+	controlMat = State{iPhase}.control;
 	
-	Problem.x0 = [Problem.x0; State{iPhase}.state; State{iPhase}.control];
+	stateArray = reshape(stateMat', [7*4*nSegment, 1]);
+	controlArray = reshape(controlMat', [3*nSegment, 1]);
+	
+	Problem.x0 = [Problem.x0; stateArray; controlArray];
 	State{iPhase}.slack = [];
 	
 	if ~isempty(Option.AddCon{iPhase, 1})
@@ -120,4 +127,6 @@ Problem.nonlcon = @(x) fminconConstraint(x, System, State, Spacecraft, ...
 Problem.options = Option.fmincon;
 %% set solver
 Problem.solver = 'fmincon';
+
+save('TEST3')
 end
