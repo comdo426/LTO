@@ -27,7 +27,7 @@ function [t, nSegment, nNode, nState, nControl, mDefect, nSlack] = ...
 
 t = StatePhase.timeSegment;
 nSegment = StatePhase.nSegment;
-nNode = 3*nSegment + 1;
+nNode = 4*nSegment;
 nState = 7*nNode;
 nControl = 3*nSegment;
 mDefect = 21*nSegment;

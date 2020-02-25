@@ -23,19 +23,18 @@ else % for non-integer revolutions
 end
 
 % state formulation
-stateMatrix = nan(3*nSegment+1, 7);
+stateMatrix = nan(4*nSegment, 7);
 for iRev = 1:intRev
 	if iRev < intRev
-		stateMatrix(3*s*(iRev-1)+1:3*s*iRev, :) = stateOneRev;
+		stateMatrix(4*s*(iRev-1)+1:4*s*iRev, :) = stateOneRev;
 	elseif isInt
-		stateMatrix(3*s*(iRev-1)+1:3*s*iRev+1, :) = ...
-			[stateOneRev; [stateInitial, 1]];
+		stateMatrix(4*s*(iRev-1)+1:4*s*iRev, :) = stateOneRev;
 	else
-		stateMatrix(3*s*(iRev-1)+1:3*s*iRev, :) = stateOneRev;
-		stateMatrix(3*s*iRev+1:3*nSegment+1, :) = stateExtra;
+		stateMatrix(4*s*(iRev-1)+1:4*s*iRev, :) = stateOneRev;
+		stateMatrix(4*s*iRev+1:4*nSegment, :) = stateExtra;
 	end % if loop
 end % iRev for loop
-stateArray = reshape(stateMatrix', [7*(3*nSegment + 1), 1]);
+stateArray = reshape(stateMatrix', [7*4*nSegment, 1]);
 
 % time formulation
 time = nan(nSegment+1, 1);
@@ -51,14 +50,32 @@ for iRev = 1:intRev
 	end
 end
 
+% time augmentation
+timeVariable = nan(4*nSegment, 1);
+timeDefect = nan(3*nSegment, 1);
+Collocation = setCollocation;
+for i = 1:nSegment
+	dt = time(i+1) - time(i);
+	timeAug = time(i) + dt*Collocation.tauRatio;
+	timeVariable(4*(i-1)+1:4*i) = timeAug(1:2:7);
+	timeDefect(3*(i-1)+1:3*i) = timeAug(2:2:6);
+end
+
+
 % control formulation
 controlMatrix = repmat([1e-10, 0, 0], [nSegment 1]); % play with numbers if you want
 controlArray = reshape(controlMatrix', [3*nSegment, 1]);
 
 % Converted to column vector, transpose needed to make the dimensions right
-InitialGuessPhase.state = stateArray;
-InitialGuessPhase.control = controlArray;
-InitialGuessPhase.timeSegment = time;
-InitialGuessPhase.nSegment = nSegment; % Remember that segment requires two nodes
+% InitialGuessPhase.state = stateArray;
+% InitialGuessPhase.control = controlArray;
+% InitialGuessPhase.timeSegment = time;
+% InitialGuessPhase.nSegment = nSegment; % Remember that segment requires two nodes
 
+InitialGuessPhase.state = stateMatrix;
+InitialGuessPhase.control = controlMatrix;
+InitialGuessPhase.timeSegment = time;
+InitialGuessPhase.timeVariable = timeVariable;
+InitialGuessPhase.timeDefect = timeDefect;
+InitialGuessPhase.nSegment = nSegment; % Remember that segment requires two nodes
 end

@@ -49,54 +49,65 @@ nPhase = length(System);
 InitialGuess = cell(nPhase,1);
 
 for iPhase = 1:nPhase
-	s = Setup.Phase{iPhase,1}.s;
-	nRev = Setup.Phase{iPhase,1}.nRev;
-	isATD = strcmp(Setup.Phase{iPhase,1}.orbitSource, 'atd');
-	isUser = strcmp(Setup.Phase{iPhase,1}.orbitSource, 'user');
+   s = Setup.Phase{iPhase,1}.s;
+   nRev = Setup.Phase{iPhase,1}.nRev;
+   isATD = strcmp(Setup.Phase{iPhase,1}.orbitSource, 'atd');
+   isUser = strcmp(Setup.Phase{iPhase,1}.orbitSource, 'user');
+   
+   if isATD
+      load(Setup.Phase{iPhase,1}.orbitName)
+      isJC = strcmp(Setup.Phase{iPhase,1}.orbitSelect{1}, 'JC');
+      nOrbit = length(times);
+      if isJC
+         % Choose the orbit with JC that is closest to the input JC
+         targetJC = Setup.Phase{iPhase,1}.orbitSelect{2};
+         targetJCArray = ones(1,nOrbit)*targetJC;
+         JCArray = cell2mat(JC);
+         diffJCArray = abs(targetJCArray - JCArray);
+         [diffJC, orbitIndex] = min(diffJCArray);
+         fprintf('Phase %d, Set JC: %d, Orbit JC: %d, difference: %d\n', ...
+            iPhase, targetJC, JCArray(orbitIndex), diffJC);
+         stateInitial = nodes{orbitIndex}(1,:); % initial condition
+         period = times{orbitIndex}(end); % period
+      else
+         error('Currently only supports JC orbit selection');
+      end
+   elseif isUser
+      stateInitial = Setup.Phase{iPhase,1}.orbitData.stateInitial;
+      period = Setup.Phase{iPhase,1}.orbitData.period;
+   else
+      error('Currently supports atd or user input orbits')
+   end
+   
+   InitialGuess{iPhase,1} = setInitialGuessPhase(s, nRev, stateInitial, period, ...
+      System{iPhase});
 	
-	if isATD
-		load(Setup.Phase{iPhase,1}.orbitName)
-		isJC = strcmp(Setup.Phase{iPhase,1}.orbitSelect{1}, 'JC');
-		nOrbit = length(times);
-		if isJC
-			% Choose the orbit with JC that is closest to the input JC
-			targetJC = Setup.Phase{iPhase,1}.orbitSelect{2};
-			targetJCArray = ones(1,nOrbit)*targetJC;
-			JCArray = cell2mat(JC);
-			diffJCArray = abs(targetJCArray - JCArray);
-			[diffJC, orbitIndex] = min(diffJCArray);
-			fprintf('Phase %d, Set JC: %d, Orbit JC: %d, difference: %d\n', ...
-				iPhase, targetJC, JCArray(orbitIndex), diffJC);
-			stateInitial = nodes{orbitIndex}(1,:); % initial condition
-			period = times{orbitIndex}(end); % period
-		else
-			error('Currently only supports JC orbit selection');
-		end
-	elseif isUser
-		stateInitial = Setup.Phase{iPhase,1}.orbitData.stateInitial;
-		period = Setup.Phase{iPhase,1}.orbitData.period;
-	else
-		error('Currently supports atd or user input orbits')
+	if iPhase > 1
+		tDifference = InitialGuess{iPhase-1, 1}.timeSegment(end);
+		InitialGuess{iPhase, 1}.timeSegment = ...
+			InitialGuess{iPhase, 1}.timeSegment + tDifference;
+		InitialGuess{iPhase, 1}.timeVariable = ...
+			InitialGuess{iPhase, 1}.timeVariable + tDifference;
+		InitialGuess{iPhase, 1}.timeDefect = ...
+			InitialGuess{iPhase, 1}.timeDefect + tDifference;
 	end
-	
-	InitialGuess{iPhase,1} = setInitialGuessPhase(s, nRev, stateInitial, period, ...
-		System{iPhase});
-	
-	if iPhase == 1
-		InitialGuess{iPhase, 1}.initialConstraint = ...
-			[stateInitial, 1]';
-	else
-		if iPhase == nPhase
-			InitialGuess{iPhase, 1}.finalConstraint = ...
-				InitialGuess{iPhase,1}.state(end-6:end-1); % open to change, only constrain 6 states
-		end
-	end
-	
-	InitialGuess{iPhase, 1}.slack = [];
-	InitialGuess{iPhase, 1}.t0 = 0;
-	InitialGuess{iPhase, 1}.period = period;
-	
-
+   
+   if iPhase == 1
+      InitialGuess{iPhase, 1}.initialConstraint = ...
+         InitialGuess{iPhase,1}.state(1, :)';
+   end
+   
+   if iPhase == nPhase
+      InitialGuess{iPhase, 1}.finalConstraint = ...
+         InitialGuess{iPhase,1}.state(end, 1:6)'; % open to change, only constrain 6 states
+   end
+   
+   
+   InitialGuess{iPhase, 1}.slack = [];
+   InitialGuess{iPhase, 1}.t0 = 0;
+   InitialGuess{iPhase, 1}.period = period;
+   
+   
 end % iPhase for loop
 
 end

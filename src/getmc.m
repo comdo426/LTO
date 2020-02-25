@@ -24,7 +24,9 @@ for iPhase = 1:nPhase
 	mLnrAddCon = 0; % number of linear additional conditions
 	mNlnrAddCon = 0; % number of nonlinear additional conditions
 	
-	[~, mThrust, ~, ~, ~, mDefect, ~] = getPhaseStateInfo(State{iPhase});
+	[~, nSegment, ~, ~, ~, mDefect, ~] = getPhaseStateInfo(State{iPhase});
+	mThrust = nSegment;
+	mCont = 7*(nSegment-1);
 	
 	if ~isempty(Option.AddCon{iPhase, 1})
 		mnAddCon = size(Option.AddCon);
@@ -44,7 +46,7 @@ for iPhase = 1:nPhase
 			end
 		end
 	end
-	mc(iPhase) = mDefect + mThrust + mLnrAddCon + mNlnrAddCon; 
-	mcOpt(iPhase) = mDefect + mNlnrAddCon; % linear constraints are separate
+	mc(iPhase) = mDefect + mCont + mThrust + mLnrAddCon + mNlnrAddCon; 
+	mcOpt(iPhase) = mDefect + mCont + mNlnrAddCon; % linear constraints are separate
 end
 end

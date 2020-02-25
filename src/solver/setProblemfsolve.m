@@ -39,10 +39,11 @@ nPhase = length(State);
 Problem.x0 = [];
 
 for iPhase = 1:nPhase
-	[~, nSegment, ~, ~, ~, ~, ~] = getPhaseStateInfo(State{iPhase});
+	nSegment = State{iPhase}.nSegment;
+	stateMat = State{iPhase}.state;
+	controlMat = State{iPhase}.control;
 	Tmax = Spacecraft{iPhase,1}.thrustMaxND;
-	lambda = nan(nSegment, 1);
-	[~, ~, controlMat] = getStateControlMat(State{iPhase});
+	lambda = nan(nSegment, 1);	
 	for iSegment = 1:nSegment
 		T = controlMat(iSegment, 1);
 		if T <= Tmax
@@ -51,8 +52,12 @@ for iPhase = 1:nPhase
 			lambda(iSegmemt, 1) = pi/2; % when lambda becomes imag., make it "1"
 		end % T <= Tmax if loop
 	end % iSegment for loop
-	Problem.x0 = [Problem.x0; State{iPhase}.state; ...
-		State{iPhase}.control; lambda];
+	
+	stateArray = reshape(stateMat', [7*4*nSegment, 1]);
+	controlArray = reshape(controlMat', [3*nSegment, 1]);
+	
+	Problem.x0 = [Problem.x0; stateArray; controlArray; lambda];
+	
 	State{iPhase}.slack = [];
 	State{iPhase}.slack = lambda;
 	
@@ -87,5 +92,7 @@ end
 
 %% set solver
 Problem.solver = 'fsolve';
+
+save('TEST')
 
 end

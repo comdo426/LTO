@@ -30,7 +30,11 @@ stateMat = reshape(state, [7, nNode])'; %Transpose to match the dimensions
 stateSegmentMat = zeros(nSegment+1,7);
 stateSegmentMat(1,:) = stateMat(1,:);
 for i = 1:nSegment
-	stateSegmentMat(i+1,:) = stateMat(3*i+1, :);
+	if i ~= nSegment
+		stateSegmentMat(i+1,:) = stateMat(4*i+1, :);
+	else
+		stateSegmentMat(i+1,:) = stateMat(end, :);
+	end
 end
 
 controlMat = reshape(control, [3, nSegment])'; %Transpose
