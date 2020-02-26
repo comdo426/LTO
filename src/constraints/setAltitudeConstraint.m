@@ -29,7 +29,7 @@ mu = SystemPhase.parameter.mu;
 lstar = SystemPhase.parameter.lstar;
 
 [~, ~, nNode, ~, ~, ~, ~] = getPhaseStateInfo(StatePhase);
-[stateMat, ~, ~] = getStateControlMat(StatePhase);
+stateMat = StatePhase.state;
 
 primaryNo = Con{4};
 minAlt = Con{5}/lstar;

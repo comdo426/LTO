@@ -164,7 +164,7 @@ for iPhase = 1:nPhase
 	dFCelldu = num2cell(dF2DMatu, [1 2]);
 	dFdu = blkdiag(dFCelldu{:});
 	
-	dFDefect = [dFdx, dFdu, zeros(mDefect, nSegment)];
+	dFDefect = [dFdx, dFdu, zeros(mDefect, nx(iPhase)-nState-nControl)];
 	
 	%% Continuity between segments
 	
@@ -203,9 +203,6 @@ for iPhase = 1:nPhase
 	end
 	
 	
-	F(1+mb:mc(iPhase)+mb) = [FDefect; FCont; FThrust];
-	dF(1+mb:mc(iPhase)+mb, 1+nb:nx(iPhase)+nb) = [dFDefect; dFCont; dFThrust];
-	
 	
 	% initial/final state at each phase
 	phaseIni(:, iPhase) = Y(:,1,1);
@@ -214,38 +211,44 @@ for iPhase = 1:nPhase
 	
 	
 	%% Additional constraints
-% 	if ~isempty(Option.AddCon{iPhase, 1})
-% 		
-% 		for iNode = 1:nNode
-% 			
-% 			% Note that some of the below is written only for altitude constraint.
-% 			sigma1 = x(nState + nControl + nThrust + iNode + nb);
-% 			nSigma1 = nNode;
-% 			mSigma1 = nNode;
-% 			sigma2 = x(nState + nControl + nThrust + nSigma1 + iNode +nb);
-% 			
-% 			minAlt1 = Option.AddCon{iPhase,1}{5}/lstar;
-% 			minAlt2 = Option.AddCon{iPhase,2}{5}/lstar;
-% 			pos = x(7*(iNode-1)+1+nb:7*(iNode-1)+3+nb);
-% 			alt1 = norm(pos' - [-mu, 0, 0]);
-% 			alt2 = norm(pos' - [1-mu, 0, 0]);
-% 			
-% 			F(mDefect + mThrust + iNode + mb, 1) = ...
-% 				alt1^2*sin(sigma1) - minAlt1^2;
-% 			F(mDefect + mThrust + mSigma1 + iNode + mb, 1) = ...
-% 				alt2^2*sin(sigma2) - minAlt2^2;
-% 			
-% 			dF(mDefect + mThrust + iNode + mb, 7*(iNode-1)+1 + nb:7*(iNode-1)+3 + nb) = ...
-% 				2*(pos' - [-mu, 0, 0])*sin(sigma1);
-% 			dF(mDefect + mThrust + iNode + mb, nState+nControl+nThrust+iNode +nb) = ...
-% 				alt1^2*cos(sigma1);
-% 			dF(mDefect + mThrust + mSigma1 + iNode + mb, 7*(iNode-1)+1 +nb:7*(iNode-1)+3 + nb) = ...
-% 				2*(pos' - [1-mu, 0, 0])*sin(sigma2);
-% 			dF(mDefect + mThrust + mSigma1 + iNode + mb, nState+nControl+nThrust+nSigma1+iNode +nb) = ...
-% 				alt2^2*cos(sigma2);
-% 			
-% 		end
-% 	end
+	if ~isempty(Option.AddCon{iPhase, 1})
+						
+		FAlt = nan(2*nNode, 1);
+		dFAlt = zeros(2*nNode, nx(iPhase));
+		for iNode = 1:nNode
+			
+			% Note that some of the below is written only for altitude constraint.
+			sigma1 = x(nState + nControl + nThrust + iNode + nb);
+			nSigma1 = nNode;
+			mSigma1 = nNode;
+			sigma2 = x(nState + nControl + nThrust + nSigma1 + iNode +nb);
+			
+			minAlt1 = Option.AddCon{iPhase,1}{5}/lstar;
+			minAlt2 = Option.AddCon{iPhase,2}{5}/lstar;
+			pos = x(7*(iNode-1)+1+nb:7*(iNode-1)+3+nb);
+			alt1 = norm(pos' - [-mu, 0, 0]);
+			alt2 = norm(pos' - [1-mu, 0, 0]);
+			
+			FAlt(iNode, 1) = alt1^2*sin(sigma1) - minAlt1^2;
+			FAlt(mSigma1 + iNode, 1) = alt2^2*sin(sigma2) - minAlt2^2;
+			
+			dFAlt(iNode, 7*(iNode-1)+1:7*(iNode-1)+3) = ...
+				2*(pos' - [-mu, 0, 0])*sin(sigma1);
+			dFAlt(iNode, nState+nControl+nThrust+iNode) = ...
+				alt1^2*cos(sigma1);
+			dFAlt(mSigma1 + iNode, 7*(iNode-1)+1:7*(iNode-1)+3) = ...
+				2*(pos' - [1-mu, 0, 0])*sin(sigma2);
+			dFAlt(mSigma1 + iNode, nState+nControl+nThrust+nSigma1+iNode) = ...
+				alt2^2*cos(sigma2);
+			
+		end
+	else
+		FAlt = [];
+		dFAlt = [];
+	end
+	save('TEST')
+	F(1+mb:mc(iPhase)+mb) = [FDefect; FCont; FThrust; FAlt];
+	dF(1+mb:mc(iPhase)+mb, 1+nb:nx(iPhase)+nb) = [dFDefect; dFCont; dFThrust; dFAlt];
 	
 	%% Continuity constraint
 	
