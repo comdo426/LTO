@@ -93,9 +93,16 @@ for iPhase = 1:nPhase
 	
 	Y = reshape(x(1+nb:nState+nb), [7,4,nSegment]);
 	% TODO - check that this does not break after the first segment;
-	uColumn = reshape(x(nState+1+nb:nState+nControl+nb), [3,1,nSegment]);
+	uColumn = reshape(x(nState+1+nb:nState+nControl+nb), [4,1,nSegment]);
 	UVar = repmat(uColumn, [1,4,1]);
+	
+	uxVar = UVar(2, :, :);
+	uyVar = UVar(3, :, :);
+	
 	UDef = repmat(uColumn, [1,3,1]);
+	
+	uxDef = UDef(2, :, :);
+	uyDef = UDef(3, :, :);
 	
 	tVarMat = reshape(State{iPhase}.timeVariable, [1,4,nSegment]);
 	tDefMat = reshape(State{iPhase}.timeDefect, [1,3,nSegment]);
@@ -105,18 +112,34 @@ for iPhase = 1:nPhase
 		dtMat(:,:,i) = dt;
 	end
 	
-	UVar(2,:,:) = UVar(2,:,:) - tVarMat;
-	UDef(2,:,:) = UDef(2,:,:) - tDefMat;
-	 
-	Ydot = getDerivCSIVectorized(mu, Y, UVar, ispND, g0ND);
+	UVarRot = UVar;
+	UDefRot = UDef;
+	
+	UVarRot(2:3, :, :) = [cos(tVarMat).*uxVar + sin(tVarMat).*uyVar;
+		-sin(tVarMat).*uxVar + cos(tVarMat).*uyVar];
+	
+	UDefRot(2:3, :, :) = [cos(tDefMat).*uxDef + sin(tDefMat).*uyDef;
+		-sin(tDefMat).*uxDef + cos(tDefMat).*uyDef];
+	
+	% 	alphaVarInertial = atan2(UVar(3,:,:), UVar(2,:,:));
+	% 	alphaDefInertial = atan2(UDef(3,:,:), UDef(2,:,:));
+	%
+	% 	alphaVarRot = alphaVarInertial - tVarMat;
+	% 	alphaDefRot = alphaDefInertial - tDefMat;
+	%
+	% 	UVar(2:3, :, :) = [cos(alphaVarRot); sin(alphaVarRot)];
+	% 	UDef(2:3, :, :) = [cos(alphaDefRot); sin(alphaDefRot)];
+	
+	Ydot = getDerivCSIVectorized(mu, Y, UVarRot, ispND, g0ND);
 	
 	C = mtimesx([Y, dtMat/2.*Ydot], invA);
 	CB = mtimesx(C,B);
 	CD = mtimesx(C,D);
-	CBdot = getDerivCSIVectorized(mu, CB, UDef, ispND, g0ND);
+	CBdot = getDerivCSIVectorized(mu, CB, UDefRot, ispND, g0ND);
 	FMat = CD - dtMat/2.*CBdot;
 	FDefect = reshape(FMat, [21*nSegment, 1]);
 	
+
 	h = sqrt(eps);
 	
 	dF2DMat = nan(21, 28, nSegment);
@@ -127,11 +150,11 @@ for iPhase = 1:nPhase
 		rowNo = jj-7*(columnNo-1);
 		hMat(rowNo, columnNo, :) = ones(1,1,nSegment);
 		Yp = Y + h*1j*hMat;
-		Ydotp = getDerivCSIVectorized(mu, Yp, UVar, ispND, g0ND);
+		Ydotp = getDerivCSIVectorized(mu, Yp, UVarRot, ispND, g0ND);
 		Cp = mtimesx([Yp, dtMat/2.*Ydotp], invA);
 		CBp = mtimesx(Cp,B);
 		CDp = mtimesx(Cp,D);
-		CBdotp = getDerivCSIVectorized(mu, CBp, UDef, ispND, g0ND);
+		CBdotp = getDerivCSIVectorized(mu, CBp, UDefRot, ispND, g0ND);
 		FMatp = CDp - dtMat/2.*CBdotp;
 		dF2DMat(:,jj,:) = reshape(imag(FMatp-FMat)/h, [21, 1, nSegment]);
 	end
@@ -139,28 +162,41 @@ for iPhase = 1:nPhase
 	dFCell = num2cell(dF2DMat, [1 2]);
 	dFdx = blkdiag(dFCell{:});
 	
-	dF2DMatu = nan(21, 3, nSegment);
+	dF2DMatu = nan(21, 4, nSegment);
 	
-	for jj = 1:3
-		huMat = zeros(3,1,nSegment);
+	for jj = 1:4
+		
+		huMat = zeros(4,1,nSegment);
 		huMat(jj,1,:) = ones(1,1,nSegment);
-		uColumnp = uColumn+h*1j*huMat;
-		UVarp = repmat(uColumnp, [1,4,1]);
-		UDefp = repmat(uColumnp, [1,3,1]);
+		huColumn = h*1j*huMat;
+		UVarp = UVar + repmat(huColumn, [1,4,1]);
+		UDefp = UDef + repmat(huColumn, [1,3,1]);
+			
+		uxVarp = UVarp(2, :, :);
+		uyVarp = UVarp(3, :, :);
 		
-		UVarp(2,:,:) = UVarp(2,:,:) - tVarMat;
-		UDefp(2,:,:) = UDefp(2,:,:) - tDefMat;
-		
-		Ydotp = getDerivCSIVectorized(mu, Y, UVarp, ispND, g0ND);
+		uxDefp = UDefp(2, :, :);
+		uyDefp = UDefp(3, :, :);
+			
+		UVarRotp = UVarp;
+		UDefRotp = UDefp;
+
+		UVarRotp(2:3, :, :) = [cos(tVarMat).*uxVarp + sin(tVarMat).*uyVarp;
+			-sin(tVarMat).*uxVarp + cos(tVarMat).*uyVarp];
+
+		UDefRotp(2:3, :, :) = [cos(tDefMat).*uxDefp + sin(tDefMat).*uyDefp;
+			-sin(tDefMat).*uxDefp + cos(tDefMat).*uyDefp];
+	
+		Ydotp = getDerivCSIVectorized(mu, Y, UVarRotp, ispND, g0ND);
 		
 		Cp = mtimesx([Y, dtMat/2.*Ydotp], invA);
 		CBp = mtimesx(Cp,B);
 		CDp = mtimesx(Cp,D);
-		CBdotp = getDerivCSIVectorized(mu, CBp, UDefp, ispND, g0ND);
+		CBdotp = getDerivCSIVectorized(mu, CBp, UDefRotp, ispND, g0ND);
 		FMatp = CDp - dtMat/2.*CBdotp;
 		dF2DMatu(:,jj,:) = reshape(imag(FMatp-FMat)/h, [21, 1, nSegment]);
 	end
-	
+
 	dFCelldu = num2cell(dF2DMatu, [1 2]);
 	dFdu = blkdiag(dFCelldu{:});
 	
@@ -195,24 +231,36 @@ for iPhase = 1:nPhase
 	dFThrust = zeros(mThrust, nx(iPhase));
 	
 	for i = 1:nSegment
+		x(nState + nControl + i + nb) = rem(x(nState + nControl + i + nb), 2*pi);
 		lambda = x(nState + nControl + i + nb);
 		FThrust(i) = uColumn(1,1,i) - thrustMaxND*sin(lambda)^2;
-		dFThrust(i, nState + 3*(i-1)+1) = 1;
+		dFThrust(i, nState + 4*(i-1)+1) = 1;
 		dFThrust(i, nState + nControl + i) = ...
 			-2*thrustMaxND*sin(lambda)*cos(lambda);
 	end
 	
+	%% Thrust vector unit magnitude constraint
 	
+	mThrustUnit = nSegment;
+	
+	FThrustUnit = zeros(mThrustUnit, 1);
+	dFThrustUnit = zeros(mThrustUnit, nx(iPhase));
+	
+	for i = 1:nSegment
+		ThrustVec = x(nState + 4*(i-1)+2 + nb: nState + 4*(i-1)+4 + nb);
+		FThrustUnit(i) = norm(ThrustVec)^2 - 1;
+		dFThrustUnit(i, nState + 4*(i-1)+2: nState + 4*(i-1)+4) = ...
+			2*ThrustVec';
+	end
 	
 	% initial/final state at each phase
 	phaseIni(:, iPhase) = Y(:,1,1);
 	phaseFin(:, iPhase) = Y(:,end,end);
 	
 	
-	
 	%% Additional constraints
 	if ~isempty(Option.AddCon{iPhase, 1})
-						
+		
 		FAlt = nan(2*nNode, 1);
 		dFAlt = zeros(2*nNode, nx(iPhase));
 		for iNode = 1:nNode
@@ -246,9 +294,9 @@ for iPhase = 1:nPhase
 		FAlt = [];
 		dFAlt = [];
 	end
-	save('TEST')
-	F(1+mb:mc(iPhase)+mb) = [FDefect; FCont; FThrust; FAlt];
-	dF(1+mb:mc(iPhase)+mb, 1+nb:nx(iPhase)+nb) = [dFDefect; dFCont; dFThrust; dFAlt];
+	F(1+mb:mc(iPhase)+mb) = [FDefect; FCont; FThrust; FThrustUnit; FAlt];
+	dF(1+mb:mc(iPhase)+mb, 1+nb:nx(iPhase)+nb) = ...
+		[dFDefect; dFCont; dFThrust; dFThrustUnit; dFAlt];
 	
 	%% Continuity constraint
 	
@@ -306,5 +354,6 @@ for iPhase = 1:nPhase
 	end
 	
 end % iPhase for loop
+%
 
 end

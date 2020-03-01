@@ -43,25 +43,25 @@ Setup.transferType = 'periodicOrbits';
 % TEST 2: L2 Halo to L1 Halo atd. use Phase 1: s = 17, nRev =
 % 2, Phase 2: s = 17, nRev = 2 to get the same figures in the example folder
 
-% Setup.Phase{1,1}.orbitSource = 'atd';
-% Setup.Phase{2,1}.orbitSource = 'atd';
-% Setup.Phase{1,1}.orbitName = 'Halo_L2';
-% Setup.Phase{1,1}.orbitSelect = {'JC', 3.015};
-% Setup.Phase{2,1}.orbitName = 'Halo_L1';
-% Setup.Phase{2,1}.orbitSelect = {'JC', 3.015};
+Setup.Phase{1,1}.orbitSource = 'atd';
+Setup.Phase{2,1}.orbitSource = 'atd';
+Setup.Phase{1,1}.orbitName = 'Halo_L2';
+Setup.Phase{1,1}.orbitSelect = {'JC', 3.015};
+Setup.Phase{2,1}.orbitName = 'Halo_L1';
+Setup.Phase{2,1}.orbitSelect = {'JC', 3.015};
 
 % TEST 3: User provided data (DRO.mat, L4SPO.mat). use Phase 1: s = 18, nRev =
 % 3, Phase 2: s = 18, nRev = 3 to get the same figures in the example folder
 % 
-Setup.Phase{1,1}.orbitSource = 'user';
-Setup.Phase{2,1}.orbitSource = 'user';
-Setup.Phase{1,1}.orbitData = load('DRO.mat');
-Setup.Phase{2,1}.orbitData = load('L4SPO.mat');
+% Setup.Phase{1,1}.orbitSource = 'user';
+% Setup.Phase{2,1}.orbitSource = 'user';
+% Setup.Phase{1,1}.orbitData = load('DRO.mat');
+% Setup.Phase{2,1}.orbitData = load('L4SPO.mat');
 
-Setup.Phase{1,1}.s = 18; % Number of segments per rev
-Setup.Phase{1,1}.nRev = 3; % Total rev for the orbit stack
-Setup.Phase{2,1}.s = 18;
-Setup.Phase{2,1}.nRev = 3;
+Setup.Phase{1,1}.s = 17; % Number of segments per rev
+Setup.Phase{1,1}.nRev = 2; % Total rev for the orbit stack
+Setup.Phase{2,1}.s = 17;
+Setup.Phase{2,1}.nRev = 2;
 
 LPointVec = [1 2];
 Setup.plot = {true, 1, LPointVec};
@@ -109,7 +109,7 @@ Spacecraft = setSpacecraft(System, SC);
 
 Option.integrate = odeset('RelTol', 1e-12, 'AbsTol', 1e-18);
 Option.LTO = LToptset( ...
-	'FeasibilitySolver', false, ...
+	'FeasibilitySolver', true, ...
 	'Optimizer', true, ...
 	'MeshRefinement', true);
 Option.newton.maxIteration = 200;
@@ -144,14 +144,48 @@ Option.fsolve = optimoptions( ...
 % 	'OptimalityTolerance', 1e-6, ...
 % 	'maxiteration', 100000, ...
 % 	'InitBarrierParam', 1e-4);
+Option.ipoptopt.ipopt.jac_c_constant = 'no';
+Option.ipoptopt.ipopt.jac_d_constant = 'no';
 
-Option.ipopt = ipoptset;
+Option.ipoptopt.ipopt.hessian_constant = 'no';
+Option.ipoptopt.ipopt.hessian_approximation = 'limited-memory';
+Option.ipoptopt.ipopt.limited_memory_update_type = 'bfgs';
+
+Option.ipoptopt.ipopt.mu_strategy = 'monotone';
+
+Option.ipoptopt.ipopt.max_iter = 3000;
+% Option.ipoptopt.ipopt.tol = 1e-8;
+% Option.ipoptopt.ipopt.acceptable_tol = 5e-5;
+
+Option.ipoptopt.ipopt.acceptable_iter = 1;
+
+Option.ipoptopt.ipopt.acceptable_constr_viol_tol = 1e-13;
+Option.ipoptopt.ipopt.constr_viol_tol = 5e-14;
+
+Option.ipoptopt.ipopt.dual_inf_tol = 5e-7;
+Option.ipoptopt.ipopt.acceptable_dual_inf_tol = 1e-6;
+
+Option.ipoptopt.ipopt.compl_inf_tol = 1e-3;
+Option.ipoptopt.ipopt.acceptable_compl_inf_tol = 1e-2;
+
+Option.ipoptopt.ipopt.mu_init = 1e-1;
+Option.ipoptopt.ipopt.bound_frac = 1e-12;
+Option.ipoptopt.ipopt.bound_relax_factor = 1e-10;
+Option.ipoptopt.ipopt.nlp_scaling_method = 'gradient-based';
+
+Option.ipoptopt.ipopt.honor_original_bounds = 'yes';
+% 
+% Option.ipoptopt.ipopt.acceptable_dual_inf_tol = 1e-14;
+% Option.ipoptopt.ipopt.derivative_test = 'first-order';
+
+Option.posBoundary = 10000; % km;
+Option.velBoundary = 0.5; % km/s;
 
 Option.doneFeasible = false;
 Option.doneOptimize = false;
 Option.doneMesh = false;
 Option.removeMesh = false;
-Option.meshTolerance = 1e-12;
+Option.meshTolerance = 1e-11;
 
 feasPlotNumber = [[11:1:20];[21:1:30]];
 optPlotNumber = [[31:1:40];[41:1:50]];
@@ -173,9 +207,9 @@ Option.AddCon{2, 2} = {'nlnr', 'ineq', 'Altitude', 2, 7000};
 
 Result = LTOMain(System, InitialGuess, Spacecraft, Option);
 
-prompt = 'LTO done, file save?';
-fileName = input(prompt);
-save(fileName);
+% prompt = 'LTO done, file save?';
+% fileName = input(prompt);
+% save(fileName);
 
 
 

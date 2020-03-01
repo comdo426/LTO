@@ -61,6 +61,8 @@ Collocation = setCollocation;
 invA = Collocation.invA;
 BAdd = Collocation.BAdd;
 
+save('TEST66')
+
 tauRatio = Collocation.tauRatio;
 % phiMeshAdd = Collocation.phiMeshAdd;
 
@@ -107,21 +109,21 @@ if Option.removeMesh
 			xR(:, j) = [xj1+(xj2-xj1)*tauRatio(3); xj1+(xj2-xj1)*tauRatio(5)];
 			if nRemove == 1
 				xNew = [x(1:21*(rN(j)-1)+7); xR; x(21*(rN(j)+1)+nState)];
-				uNew = [x(nState+1: nState+3*(rN(j)-1)+3); x(nState+3*nR(j)+4:end)];
+				uNew = [x(nState+1: nState+4*(rN(j)-1)+4); x(nState+4*nR(j)+5:end)];
 			else
 				if j < nRemove
 					if j == 1
 						xNew = [x(1:28*(rN(j)-1)+7); xR];
-						uNew = [x(nState+1: nState+3*(rN(j)-1)+3)];
+						uNew = [x(nState+1: nState+4*(rN(j)-1)+4)];
 					else
 						xNew = [xNew; x(21*(nR(j-1)+1)+1: 21*(nR(j)-1)+7); xR];
-						uNew = [uNew; x(nState+3*(nR(j-1)+1)+1: nState+3*(nR(j)-1)+3)];
+						uNew = [uNew; x(nState+4*(nR(j-1)+1)+1: nState+4*(nR(j)-1)+4)];
 					end
 				else
 					xNew = [xNew; x(28*(nR(j-1)+1)+1: 28*(nR(j)-1)+7); xR; ...
 						x(28*(nR(j)+1)+1: nState)];
-					uNew = [uNew; x(nState+3*(nR(j-1)+1)+1: nState+3*(nR(j)-1)+3); ...
-						x(nState+3*nR(j)+4:end)];
+					uNew = [uNew; x(nState+4*(nR(j-1)+1)+1: nState+4*(nR(j)-1)+4); ...
+						x(nState+4*nR(j)+5:end)];
 				end
 			end
 		end
@@ -167,13 +169,21 @@ else
 			% Find the u at the beginning and end of the segment. Remember that we
 			% don't have control defined at the end point, so it is assumed to be
 			% the same as before, just for consistency within the code.
-			uA = x(nState+3*(aN(j)-1)+1: nState+3*(aN(j)-1)+3);
+			uA = x(nState+4*(aN(j)-1)+1: nState+4*(aN(j)-1)+4);
 			
 			T = uA(1)*ones(1, 4);
 			angleRotated = dt*[tauRatio(1), tauRatio(3), tauRatio(5), tauRatio(7)] + ...
 				t(aN(j))*ones(1,4);
-			alpha = uA(2)*ones(1, 4) - angleRotated;
-			beta = uA(3)*ones(1, 4);
+			alpha = atan2(uA(3),uA(2))*ones(1, 4) - angleRotated;
+			if imag(alpha)
+				error('alpha imag')
+				save('TEST3')
+			end
+			beta = asin(uA(4))*ones(1, 4);
+			if imag(beta)
+				error('beta image')
+				save('TEST3')
+			end
 			Y = [x1, x3, x5, x7];
 			Ydot = getDerivCSI(mu, Y, T, alpha, beta, ispND, g0ND);
 			
@@ -185,22 +195,22 @@ else
 			
 			if length(aN) == 1
 				xNew = [x(1:28*(aN(j)-1)); xA; x(28*aN(j)+1: nState)];
-				uNew = [x(nState+1:nState+3*(aN(j)-1)+3); uA; ...
-					x(nState+3*aN(j)+1:end)];
+				uNew = [x(nState+1:nState+4*(aN(j)-1)+4); uA; ...
+					x(nState+4*aN(j)+1:end)];
 			else
 				if j < length(aN)
 					if j == 1
 						xNew = [x(1:28*(aN(j)-1)); xA];
-						uNew = [x(nState+1: nState+3*(aN(j)-1)+3); uA];
+						uNew = [x(nState+1: nState+4*(aN(j)-1)+4); uA];
 					else
 						xNew = [xNew; x(28*aN(j-1)+1:28*(aN(j)-1)); xA];
-						uNew = [uNew; x(nState+3*aN(j-1)+1: nState+3*(aN(j)-1)+3); uA];
+						uNew = [uNew; x(nState+4*aN(j-1)+1: nState+4*(aN(j)-1)+4); uA];
 					end
 				else
 					xNew = [xNew; x(28*aN(j-1)+1:28*(aN(j)-1)); xA;
 						x(28*aN(j)+1:28*s)];
-					uNew = [uNew; x(nState+3*aN(j-1)+1: nState+3*(aN(j)-1)+3); uA;
-						x(nState+3*aN(j)+1:end)];
+					uNew = [uNew; x(nState+4*aN(j-1)+1: nState+4*(aN(j)-1)+4); uA;
+						x(nState+4*aN(j)+1:end)];
 				end
 			end
 		end
@@ -210,7 +220,7 @@ else
 		StatePhase.nSegment = length(t)-1;
 		nSegment = StatePhase.nSegment;
 		StatePhase.state = reshape(xNew, [7, 4*nSegment])';
-		StatePhase.control = reshape(uNew, [3, nSegment])';
+		StatePhase.control = reshape(uNew, [4, nSegment])';
 		doneMeshPhase = false;
 		timeVariable = nan(4*nSegment, 1);
 		timeDefect = nan(3*nSegment, 1);
@@ -227,6 +237,7 @@ else
 	else % if aN is empty, or no mesh to add
 		doneMeshPhase = true;
 	end
+	save('TEST')
 end
 
 

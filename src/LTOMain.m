@@ -62,6 +62,8 @@ while isFeasible && ~Option.doneFeasible
 			'Final'}, 'fontsize', 13);
 	end % plot for feasible if loop
 	
+	save('TEST44')
+	
 	if isMesh
 		[State, Option] = ...
 			CEPMeshRefineMultiPhase(System, State, Spacecraft, Option);
@@ -71,6 +73,7 @@ while isFeasible && ~Option.doneFeasible
 	else
 		Option.doneFeasible = 1;
 	end % isMesh if loop
+% 	Option.doneFeasible = 1;
 	iWhile = iWhile + 1;
 end % isFeasible, ~Option.doneFeasible while loop
 
@@ -83,11 +86,14 @@ jWhile = 1;
 
 while isOptimize && ~Option.doneOptimize
 	cprintf(-[1, 0, 0], 'Optimize: step no. %d\n', jWhile);
-	[Problem, State] = setProblemfmincon(System, State, Spacecraft, Option, Collocation);
-	optimizedWithSlack = fmincon(Problem);
+	[x0, funcs, options, State] = setProblemipopt(System, State, Spacecraft, Option, Collocation);
+	[optimizedWithSlack, info] = ipopt_auxdata(x0, funcs, options);
+	
+% 	[optimizedWithSlack, info] = ipopt_auxdata(optimizedWithSlack, funcs, options);
 	optimizedVec = deleteSlackVariable(optimizedWithSlack, State, Option);
 	State = updateState(State, optimizedVec);
 	closestEncounter(System, State);
+	
 	if Option.plot.optimize{1}
 		drawThrustArc(Option.plot.optimize{2}(1,jWhile), Option.plot.optimize{3}, ...
 			System, State, Spacecraft);
@@ -102,6 +108,7 @@ while isOptimize && ~Option.doneOptimize
 		legend([initialPlot, interPhase, finalPlot], {'Initial', 'InterPhase', ...
 			'Final'}, 'fontsize', 13);
 	end
+	
 	
 	if isMesh
 		[State, Option] = ...

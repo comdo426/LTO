@@ -15,14 +15,15 @@ if isSame
 		controlMat = State{iPhase}.control;
 		tday = t*tstar/60/60/24;
 		Ttotal = controlMat(:,1)*thrustMaxD/thrustMaxND;
-		Tx = Ttotal.*cos(controlMat(:,2)).*cos(controlMat(:,3));
-		Ty = Ttotal.*sin(controlMat(:,2)).*cos(controlMat(:,3));
-		Tz = Ttotal.*sin(controlMat(:,3));
+		Tx = Ttotal.*controlMat(:,2);
+		Ty = Ttotal.*controlMat(:,3);
+		Tz = Ttotal.*controlMat(:,4);
 
 		h1 = stairs(tday, [Ttotal; Ttotal(end)], 'k', 'linewidth', 1.5);
 		h2 = stairs(tday, [Tx; Tx(end)], 'r', 'linewidth', 1.5);
 		h3 = stairs(tday, [Ty; Ty(end)], 'g', 'linewidth', 1.5);
 		h4 = stairs(tday, [Tz; Tz(end)], 'b', 'linewidth', 1.5);
+		
 	end
 else
 	for iPhase = 1:nPhase

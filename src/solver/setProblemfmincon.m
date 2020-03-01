@@ -128,5 +128,4 @@ Problem.options = Option.fmincon;
 %% set solver
 Problem.solver = 'fmincon';
 
-save('TEST3')
 end

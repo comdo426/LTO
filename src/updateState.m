@@ -37,7 +37,7 @@ for iPhase = 1:nPhase
 		nb = sum(nx(1:iPhase-1));
 	end
 	State{iPhase}.state = reshape(x(1+nb:nState+nb), [7, 4*nSegment])';
-	State{iPhase}.control = reshape(x(1+nState+nb:nState+nControl+nb), [3, nSegment])';
+	State{iPhase}.control = reshape(x(1+nState+nb:nState+nControl+nb), [4, nSegment])';
 end % iPhase for loop
 
 end

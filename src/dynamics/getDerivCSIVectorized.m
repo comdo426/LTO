@@ -39,15 +39,16 @@ zdot = Y(6, :, :);
 m = Y(7, :, :);
 
 T = U(1, :, :);
-alpha = U(2, :, :);
-beta = U(3, :, :);
+ux = U(2, :, :);
+uy = U(3, :, :);
+uz = U(4, :, :);
 
 d = sqrt((x+mu).^2 + y.^2 + z.^2);
 r = sqrt((x -1 + mu).^2 +y.^2 + z.^2);
 
-A1 = 2.*ydot + x - (1-mu)./d.^3.*(x+mu) - mu./r.^3.*(x-1+mu) + T./m.*cos(alpha).*cos(beta);
-A2 = -2.*xdot + y - (1-mu)./d.^3.*y - mu./r.^3.*y + T./m.*sin(alpha).*cos(beta);
-A3 = - (1-mu)./d.^3.*z - mu./r.^3.*z + T./m.*sin(beta);
+A1 = 2.*ydot + x - (1-mu)./d.^3.*(x+mu) - mu./r.^3.*(x-1+mu) + T./m.*ux;
+A2 = -2.*xdot + y - (1-mu)./d.^3.*y - mu./r.^3.*y + T./m.*uy;
+A3 = - (1-mu)./d.^3.*z - mu./r.^3.*z + T./m.*uz;
 
 mdot = -T/isp/g0;
 

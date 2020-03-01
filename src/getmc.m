@@ -26,6 +26,7 @@ for iPhase = 1:nPhase
 	
 	[~, nSegment, ~, ~, ~, mDefect, ~] = getPhaseStateInfo(State{iPhase});
 	mThrust = nSegment;
+	mThrustUnit = nSegment;
 	mCont = 7*(nSegment-1);
 	
 	if ~isempty(Option.AddCon{iPhase, 1})
@@ -46,7 +47,7 @@ for iPhase = 1:nPhase
 			end
 		end
 	end
-	mc(iPhase) = mDefect + mCont + mThrust + mLnrAddCon + mNlnrAddCon; 
-	mcOpt(iPhase) = mDefect + mCont + mNlnrAddCon; % linear constraints are separate
+	mc(iPhase) = mDefect + mCont + mThrust + mThrustUnit + mLnrAddCon + mNlnrAddCon; 
+	mcOpt(iPhase) = mDefect + mCont + mThrustUnit + mNlnrAddCon; % linear constraints are separate
 end
 end

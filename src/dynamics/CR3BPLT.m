@@ -33,16 +33,22 @@ function dYdt = CR3BPLT(t, Y, u1, mu, Isp, g0, t0)
     zdot = Y(6);
     m = Y(7);
     T = u1(1);
-    alphaInert = u1(2);
-    alpha = alphaInert - (t+t0); % subtract time, since angles are in inertial frame
-    beta = u1(3);
+	 ux = u1(2);
+	 uy = u1(3);
+	 uz = u1(4);
+	 
+	 C = [cos(t+t0), sin(t+t0);
+		 -sin(t+t0), cos(t+t0)];
+	 
+	 uxRot = (C(1,:)*[ux; uy])';
+	 uyRot = (C(2,:)*[ux; uy])';
     
     d = sqrt((x+mu).^2 + y.^2 + z.^2);
     r = sqrt((x -1 + mu).^2 +y.^2 + z.^2);
 	 
-    A1 = 2.*ydot + x - (1-mu)./d.^3.*(x+mu) - mu./r.^3.*(x-1+mu) + T./m.*cos(alpha).*cos(beta);
-    A2 = -2.*xdot + y - (1-mu)./d.^3.*y - mu./r.^3.*y + T./m.*sin(alpha).*cos(beta);
-    A3 = - (1-mu)./d.^3.*z - mu./r.^3.*z + T./m.*sin(beta);
+    A1 = 2.*ydot + x - (1-mu)./d.^3.*(x+mu) - mu./r.^3.*(x-1+mu) + T./m.*uxRot;
+    A2 = -2.*xdot + y - (1-mu)./d.^3.*y - mu./r.^3.*y + T./m.*uyRot;
+    A3 = - (1-mu)./d.^3.*z - mu./r.^3.*z + T./m.*uz;
         
     Vel = [xdot; ydot; zdot];
     Acc = [A1; A2; A3];

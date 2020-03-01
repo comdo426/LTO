@@ -63,8 +63,19 @@ end
 
 
 % control formulation
-controlMatrix = repmat([1e-10, 0, 0], [nSegment 1]); % play with numbers if you want
-controlArray = reshape(controlMatrix', [3*nSegment, 1]);
+
+controlMatrix = nan(nSegment, 4); % thrust magnitude, thrust vector components
+for i = 1:nSegment
+	vel = stateMatrix(i, 4:6);
+	controlMatrix(i, 1) = 1e-10; 
+	controlMatrix(i, 2:4) = vel/norm(vel);
+	C = [cos(time(i)), sin(time(i));
+		-sin(time(i)), cos(time(i))];
+	controlMaxtrix(i, 2:3) = (C*controlMatrix(i, 2:3)')';
+end
+% 
+% controlMatrix = repmat([1e-10, 0, 0], [nSegment 1]); % play with numbers if you want
+controlArray = reshape(controlMatrix', [4*nSegment, 1]);
 
 % Converted to column vector, transpose needed to make the dimensions right
 % InitialGuessPhase.state = stateArray;

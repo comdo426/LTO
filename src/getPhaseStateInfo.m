@@ -29,7 +29,7 @@ t = StatePhase.timeSegment;
 nSegment = StatePhase.nSegment;
 nNode = 4*nSegment;
 nState = 7*nNode;
-nControl = 3*nSegment;
+nControl = 4*nSegment;
 mDefect = 21*nSegment;
 nSlack = length(StatePhase.slack);
 

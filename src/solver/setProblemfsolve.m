@@ -46,19 +46,26 @@ for iPhase = 1:nPhase
 	lambda = nan(nSegment, 1);	
 	for iSegment = 1:nSegment
 		T = controlMat(iSegment, 1);
-		if T <= Tmax
+		if T <= Tmax && T >= 0
 			lambda(iSegment, 1) = asin(sqrt(T/Tmax));
 		else
-			lambda(iSegmemt, 1) = pi/2; % when lambda becomes imag., make it "1"
+			if T < 0
+				lambda(iSegment, 1) = 0;
+			else
+				lambda(iSegmemt, 1) = pi/2; % when lambda becomes imag., make it "1"
+			end
 		end % T <= Tmax if loop
+		if imag(lambda(iSegment,1)) ~=0
+			save('TEST3')
+			error('lambda wrong')
+		end
 	end % iSegment for loop
 	
 	stateArray = reshape(stateMat', [7*4*nSegment, 1]);
-	controlArray = reshape(controlMat', [3*nSegment, 1]);
+	controlArray = reshape(controlMat', [4*nSegment, 1]);
 	
 	Problem.x0 = [Problem.x0; stateArray; controlArray; lambda];
 	
-	State{iPhase}.slack = [];
 	State{iPhase}.slack = lambda;
 	
 	% currently only supports altitude constraint
