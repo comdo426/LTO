@@ -25,7 +25,7 @@ function [StatePhase, doneMeshPhase] = ...
 %	See also: CEPMESHREFINEMULTIPHASE, CR3BPLT_CSI_INERTIAL, CONICLT
 %
 %   Author: Beom Park
-%   Date: 01-Feb-2020; Last revision: 17-Feb-2020
+%   Date: 01-Feb-2020; Last revision: 01-Mar-2020
 
 % Define the propagator depending on the dynamics
 isCR3BP = strcmp(SystemPhase.dynamics{1}, 'CR3BP');
@@ -60,8 +60,6 @@ u = StatePhase.control;
 Collocation = setCollocation;
 invA = Collocation.invA;
 BAdd = Collocation.BAdd;
-
-save('TEST66')
 
 tauRatio = Collocation.tauRatio;
 % phiMeshAdd = Collocation.phiMeshAdd;
@@ -156,7 +154,7 @@ else
 	end
 	
 	if ~isempty(aN)
-		cprintf(-[0 0 1], 'Max error is %0.5e\n', max(normEA));
+		cprintf(-[0 1 1], 'Max error is %0.5e\n', max(normEA));
 		
 		for j = 1:length(aN)
 			dt = t(aN(j)+1)-t(aN(j));
@@ -177,12 +175,10 @@ else
 			alpha = atan2(uA(3),uA(2))*ones(1, 4) - angleRotated;
 			if imag(alpha)
 				error('alpha imag')
-				save('TEST3')
 			end
 			beta = asin(uA(4))*ones(1, 4);
 			if imag(beta)
 				error('beta image')
-				save('TEST3')
 			end
 			Y = [x1, x3, x5, x7];
 			Ydot = getDerivCSI(mu, Y, T, alpha, beta, ispND, g0ND);
@@ -237,7 +233,6 @@ else
 	else % if aN is empty, or no mesh to add
 		doneMeshPhase = true;
 	end
-	save('TEST')
 end
 
 

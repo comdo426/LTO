@@ -16,6 +16,6 @@ function setGlobalVariable
     global SMA_SUNEARTH
     SMA_SUNEARTH = 149649952;
     global SMA_SUNMARS
-    SMA_SUNMARS = 1;
+    SMA_SUNMARS = 227953016;
     global SMA_MARSDEIMOS
 end

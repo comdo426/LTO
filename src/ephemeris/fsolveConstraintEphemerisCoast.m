@@ -1,4 +1,4 @@
-function [F, dF] = fsolveConstraintEphemerisCoast(x, JDFix, iFix, System, Body, N)
+function [F, dF, dFspr] = fsolveConstraintEphemerisCoast(x, JDFix, iFix, System, Body, N)
 %FSOLVECONSTRAINTEPHEMEIRSCOAST - computes the F and dF matrix for fsolve/newtonRaphson
 %
 %  Syntax:
@@ -74,6 +74,5 @@ end
 % 
 F(mState+mTime+1) = t(iFix);
 dF(mState+mTime+1, nState+nSegment+iFix) = 1;
-	
-save('TEST')
+dFspr = sparse(dF);
 end

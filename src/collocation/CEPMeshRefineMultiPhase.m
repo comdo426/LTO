@@ -32,7 +32,7 @@ doneMesh = zeros(nPhase,1);
 
 for j = 1:nPhase
 	
-	cprintf(-[0 0 1], 'Phase no. %d, mesh refinement\n', j);
+	cprintf(-[0 1 1], 'Phase no. %d, mesh refinement\n', j);
 	[State{j}, doneMesh(j,1)] = ...
 		CEPMeshRefineSinglePhase(System{j}, State{j}, Spacecraft{j}, Option);
 	

@@ -68,6 +68,12 @@ for iPhase = 1:nPhase
          fprintf('Phase %d, Set JC: %d, Orbit JC: %d, difference: %d\n', ...
             iPhase, targetJC, JCArray(orbitIndex), diffJC);
          stateInitial = nodes{orbitIndex}(1,:); % initial condition
+			% Ad Hoc for Souther L2 Halo
+			if iPhase == 1
+				stateInitial(3) = -stateInitial(3);
+				stateInitial(6) = -stateInitial(6);
+			end
+				
          period = times{orbitIndex}(end); % period
       else
          error('Currently only supports JC orbit selection');
@@ -99,7 +105,7 @@ for iPhase = 1:nPhase
    
    if iPhase == nPhase
       InitialGuess{iPhase, 1}.finalConstraint = ...
-         InitialGuess{iPhase,1}.state(1, 1:6)'; % open to change, only constrain 6 states
+         InitialGuess{iPhase,1}.state(end, 1:6)'; % open to change, only constrain 6 states
    end
    
    

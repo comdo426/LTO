@@ -54,7 +54,7 @@ Problem.x0 = [];
 nTime = length(time);
 nSegment = nTime-1;
 nState = 7*nSegment + 7;
-nControl = 3*nSegment;
+nControl = 4*nSegment;
 Problem.x0 = nan(nState + nSegment + nTime + nControl,1);
 stateVector = reshape(stateMat', [nState, 1]); % transpose to make it right
 

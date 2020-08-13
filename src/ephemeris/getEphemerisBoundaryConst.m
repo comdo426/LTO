@@ -1,4 +1,4 @@
-function [stateRotPlot,	JDFix, stateFix] = ...
+ function [stateRotPlot,	JDFix, stateFix] = ...
 	getEphemerisBoundaryConst(System, State, Option, EphemOption)
 %GETEPHEMERISBOUNDARYCONST - get ephemeris boundary constraints
 %
@@ -22,6 +22,7 @@ function [stateRotPlot,	JDFix, stateFix] = ...
 
 %% initial periodic orbit
 
+cprintf(-[0 1 1], 'Converging initial periodic orbit\n');
 initialState = State{1}.initialConstraint(1:6);
 initialPeriod = State{1}.period;
 [stateInitialND, timeInitial] = periodicOrbit2Ephemeris(System{1}, ...
@@ -56,6 +57,7 @@ for i = 1:nSegment
 		axis equal
 		grid on
 		plot3(YRot(1,1), YRot(1,2), YRot(1,3), '^r', 'linewidth', 2.0)
+		stateRotPlot.initialFix = YRot;
 	end
 	
 end
@@ -66,6 +68,7 @@ stateRotPlot.initial = stateInitialRotPlot;
 
 %% final periodic orbit
 
+cprintf(-[0 1 1], 'Converging final periodic orbit\n');
 finalState = State{2}.finalConstraint(1:6);
 finalPeriod = State{2}.period;
 [stateFinalND, timeFinal] = periodicOrbit2Ephemeris(System{1}, ...
@@ -92,6 +95,7 @@ for i = 1:nSegment
 		axis equal
 		grid on
 		plot3(YRot(1,1), YRot(1,2), YRot(1,3), 'vr', 'linewidth', 2.0)
+		stateRotPlot.finalFix = YRot;
 	end
 end
 

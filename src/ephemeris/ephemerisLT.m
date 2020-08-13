@@ -52,8 +52,9 @@ zdot = Y(6);
 m = Y(7);
 
 T = u(1);
-alpha = u(2);
-beta = u(3);
+ux = u(2);
+uy = u(3);
+uz = u(4);
 
 A1 = 0;
 A2 = 0;
@@ -70,9 +71,9 @@ for iBody = 1:nBody
 		
 		r = sqrt(x^2 + y^2 + z^2);
 		
-		A1 = A1 - x*muND/r^3 + T./m*cos(alpha)*cos(beta);
-		A2 = A2 - y*muND/r^3 + T./m*sin(alpha)*cos(beta);
-		A3 = A3 - z*muND/r^3 + T./m*sin(beta);
+		A1 = A1 - x*muND/r^3 + T./m*ux;
+		A2 = A2 - y*muND/r^3 + T./m*uy;
+		A3 = A3 - z*muND/r^3 + T./m*uz;
 		mdot = -T/(Isp*g0);
 		
 	else

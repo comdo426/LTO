@@ -1,4 +1,4 @@
-function [F, dF] = fsolveConstraint(x, System, State, ...
+function [F, dF, dFspr] = fsolveConstraint(x, System, State, ...
 	Spacecraft, Option, Collocation)
 %FSOLVECONSTRAINT - computes the F and dF matrix for fsolve/newtonRaphson
 %
@@ -11,6 +11,10 @@ function [F, dF] = fsolveConstraint(x, System, State, ...
 %
 %  Inputs:
 %		x - parameter composed of state, control and slack variables
+%			state - 7 component for each node, 28 components for each segment
+%			control - 4 components(T, ux, uy, uz) for each segment
+%			slack variables - 1 component for each segment(Thrust), 2 components
+%			for each node(altitude constraint)
 %
 %  Outputs:
 %     F - constraint column vector
@@ -19,14 +23,13 @@ function [F, dF] = fsolveConstraint(x, System, State, ...
 %  See also: FMINCONCONSTRAINT
 %
 %   Author: Beom Park
-%   Date: 01-Feb-2020; Last revision: 24-Feb-2020
+%   Date: 01-Feb-2020; Last revision: 01-Mar-2020
 
 nPhase = length(System);
 
 invA = Collocation.invA;
 B = Collocation.B;
 D = Collocation.D;
-
 
 
 %% number of continuity constraint
@@ -78,6 +81,7 @@ for iPhase = 1:nPhase
 	mu = System{iPhase}.parameter.mu;
 	lstar = System{iPhase}.parameter.lstar;
 	tstar(iPhase) = System{iPhase}.parameter.tstar;
+	tau0 = State{iPhase}.t0;
 	
 	[t, nSegment, nNode, nState, nControl, mDefect, ~] = ...
 		getPhaseStateInfo(State{iPhase});
@@ -115,20 +119,11 @@ for iPhase = 1:nPhase
 	UVarRot = UVar;
 	UDefRot = UDef;
 	
-	UVarRot(2:3, :, :) = [cos(tVarMat).*uxVar + sin(tVarMat).*uyVar;
-		-sin(tVarMat).*uxVar + cos(tVarMat).*uyVar];
+	UVarRot(2:3, :, :) = [cos(tVarMat+tau0).*uxVar + sin(tVarMat+tau0).*uyVar;
+		-sin(tVarMat+tau0).*uxVar + cos(tVarMat+tau0).*uyVar];
 	
-	UDefRot(2:3, :, :) = [cos(tDefMat).*uxDef + sin(tDefMat).*uyDef;
-		-sin(tDefMat).*uxDef + cos(tDefMat).*uyDef];
-	
-	% 	alphaVarInertial = atan2(UVar(3,:,:), UVar(2,:,:));
-	% 	alphaDefInertial = atan2(UDef(3,:,:), UDef(2,:,:));
-	%
-	% 	alphaVarRot = alphaVarInertial - tVarMat;
-	% 	alphaDefRot = alphaDefInertial - tDefMat;
-	%
-	% 	UVar(2:3, :, :) = [cos(alphaVarRot); sin(alphaVarRot)];
-	% 	UDef(2:3, :, :) = [cos(alphaDefRot); sin(alphaDefRot)];
+	UDefRot(2:3, :, :) = [cos(tDefMat+tau0).*uxDef + sin(tDefMat+tau0).*uyDef;
+		-sin(tDefMat+tau0).*uxDef + cos(tDefMat+tau0).*uyDef];
 	
 	Ydot = getDerivCSIVectorized(mu, Y, UVarRot, ispND, g0ND);
 	
@@ -181,11 +176,11 @@ for iPhase = 1:nPhase
 		UVarRotp = UVarp;
 		UDefRotp = UDefp;
 
-		UVarRotp(2:3, :, :) = [cos(tVarMat).*uxVarp + sin(tVarMat).*uyVarp;
-			-sin(tVarMat).*uxVarp + cos(tVarMat).*uyVarp];
+		UVarRotp(2:3, :, :) = [cos(tVarMat+tau0).*uxVarp + sin(tVarMat+tau0).*uyVarp;
+			-sin(tVarMat+tau0).*uxVarp + cos(tVarMat+tau0).*uyVarp];
 
-		UDefRotp(2:3, :, :) = [cos(tDefMat).*uxDefp + sin(tDefMat).*uyDefp;
-			-sin(tDefMat).*uxDefp + cos(tDefMat).*uyDefp];
+		UDefRotp(2:3, :, :) = [cos(tDefMat+tau0).*uxDefp + sin(tDefMat+tau0).*uyDefp;
+			-sin(tDefMat+tau0).*uxDefp + cos(tDefMat+tau0).*uyDefp];
 	
 		Ydotp = getDerivCSIVectorized(mu, Y, UVarRotp, ispND, g0ND);
 		
@@ -223,14 +218,11 @@ for iPhase = 1:nPhase
 	% slack variable at each segment
 	mThrust = nSegment;
 	nThrust = nSegment;
-	% 	lambdaVec = x(nState + nControl + 1 + nb : nState + nControl + nThrust + nb);
-	%
-	% 	ThrustVec = reshape(uColumn(1,1,:), [nSegment, 1]);
-	% 	FThrust = ThrustVec - thrustMaxND.*sin(lambdaVec).^2;
 	FThrust = zeros(mThrust, 1);
 	dFThrust = zeros(mThrust, nx(iPhase));
 	
 	for i = 1:nSegment
+		% switch to angle between 0 ~ 2pi just for clarity
 		x(nState + nControl + i + nb) = rem(x(nState + nControl + i + nb), 2*pi);
 		lambda = x(nState + nControl + i + nb);
 		FThrust(i) = uColumn(1,1,i) - thrustMaxND*sin(lambda)^2;
@@ -307,6 +299,7 @@ for iPhase = 1:nPhase
 		F(mt+1: mt+nIniCon) = phaseIni(:, 1) - stateIniCon;
 	else
 		isSame = isequaln(System{iPhase}.dynamics, System{iPhase-1}.dynamics);
+		isSame = 1;
 		if isSame % Share same dynamics
 			F(mt+nIniCon+7*(iPhase-2)+1: mt+nIniCon+7*(iPhase-1)) = ...
 				phaseIni(:,iPhase) - phaseFin(:,iPhase-1);
@@ -329,6 +322,7 @@ for iPhase = 1:nPhase
 		dF(mt+1: mt+nIniCon, 1:nIniCon) = eye(nIniCon);
 		if nPhase > 1
 			isSame = isequaln(System{iPhase+1}.dynamics, System{iPhase}.dynamics);
+			isSame = 1; % Ad hoc
 			if isSame
 				dF(mt+nIniCon+1: mt+nIniCon+7, (nState-7)+1:nState) = -eye(7);
 			else
@@ -355,5 +349,8 @@ for iPhase = 1:nPhase
 	
 end % iPhase for loop
 %
+% save('TESTFsolve')
+% error('TEST')
+dFspr = sparse(dF);
 
 end

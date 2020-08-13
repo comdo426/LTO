@@ -31,7 +31,7 @@ function [Problem, State] = setProblemfsolve(System, State, Spacecraft, Option, 
 %  See also: LTOMAIN, SETPROBLEMFMINCON, FSOLVECONSTRAINTS
 %
 %   Author: Beom Park
-%   Date: 01-Feb-2020; Last revision: 16-Feb-2020
+%   Date: 01-Feb-2020; Last revision: 01-Mar-2020
 
 nPhase = length(State);
 
@@ -52,7 +52,7 @@ for iPhase = 1:nPhase
 			if T < 0
 				lambda(iSegment, 1) = 0;
 			else
-				lambda(iSegmemt, 1) = pi/2; % when lambda becomes imag., make it "1"
+				lambda(iSegment, 1) = pi/2; % when lambda becomes imag., make it "1"
 			end
 		end % T <= Tmax if loop
 		if imag(lambda(iSegment,1)) ~=0
@@ -60,6 +60,9 @@ for iPhase = 1:nPhase
 			error('lambda wrong')
 		end
 	end % iSegment for loop
+	
+% 	size(stateMat)
+% 	nSegment
 	
 	stateArray = reshape(stateMat', [7*4*nSegment, 1]);
 	controlArray = reshape(controlMat', [4*nSegment, 1]);

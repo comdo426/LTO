@@ -1,3 +1,4 @@
+
 function Feasible = newtonRaphson(Problem)
 %NEWTONRAPHSON - NewtonRaphson method to solve for zero
 %
@@ -32,6 +33,9 @@ iNewtonMax = Problem.options.maxIteration;
 iNewton = 1;
 normF = 1000;
 dx = zeros(length(Problem.x0), 1);
+
+warning('error', 'MATLAB:nearlySingularMatrix');
+
 while normF > tol
 	if iNewton == 1
 		x = Problem.x0;
@@ -39,11 +43,39 @@ while normF > tol
 	if iNewton > iNewtonMax
 		break;
 	end
-	[F, dF] = Problem.objective(x);
+	[F, dF, dFspr] = Problem.objective(x);
 	normF = norm(F);
-	fprintf('NewtonRaphson step no. %d: error norm is %e\n', iNewton, normF);
+   
+%    if iNewton > 29 % Ad-hoc version.
+      fprintf('NewtonRaphson step no. %d: error norm is %e\n', iNewton, normF);
+%    end
+
+% 	if iNewton == 1 || badRcond
+% 		rcondNo = rcond(dF*dF');
+% 		badRcond = rcondNo < 1e-17;
+% 	end
+
+	try	
+		dx = -dFspr'*((dFspr*dFspr')\F);
+   catch
+      warning('on', 'MATLAB:nearlySingularMatrix');
+      if iNewton > 29 % Ad-hoc version.
+         fprintf('Badly scaled matrix\n')
+      end
+      dx = -dF'*((dF*dF')\F);
+      warning('error', 'MATLAB:nearlySingularMatrix');
+	end
+% 	if badRcond
+% 		dx = -dF'*((dF*dF')\F);
+% 		lastwarn
+% 		error('TEST')
+% 	else
+% 		tic
+% 		dx = -dFspr'*((dFspr*dFspr')\F);
+% 		toc
+% 	end
 	
-	dx = - dF'*((dF*dF')\F);
+	
 	x = x+dx;
 	
 	iNewton = iNewton + 1;

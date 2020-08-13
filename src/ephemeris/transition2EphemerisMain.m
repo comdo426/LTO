@@ -40,11 +40,13 @@ function [statePeriodicOrbitPlot, TransferEphemeris] = ...
 
 %% Periodic orbits to ephemeris
 
+cprintf(-[0 0.5 0.5], 'Converging periodic orbits\n');
 [statePeriodicOrbitPlot, JDFix, stateFix] = ...
 	getEphemerisBoundaryConst(System, State, Option, EphemOption);
 
 %% Transfer arc to ephemeris
 
+cprintf(-[0 0.5 0.5], 'Converging transfer trajectory\n');
 TransferEphemeris = getEphemerisTransfer(System, State, Spacecraft, Option,...
 	EphemOption, JDFix, stateFix);
 

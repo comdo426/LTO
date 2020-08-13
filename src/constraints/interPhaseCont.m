@@ -1,4 +1,4 @@
-% Currently only applies to CR3BP - 2BP link
+.% Currently only applies to CR3BP - 2BP link
 
 function phaseFinNew = interPhaseCont(phaseFin, System1, System2, JD)
 
